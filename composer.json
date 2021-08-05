@@ -1,10 +1,14 @@
 {
     "name": "dreamyi12/apidoc",
-    "type": "library",
-    "license": "MIT",
     "keywords": [
         "php",
         "hyperf"
+    ],
+    "authors": [
+        {
+            "name": "Fan Lee",
+            "email": "dreamyi12@126.com"
+        }
     ],
     "description": "",
     "autoload": {
@@ -19,15 +23,6 @@
     },
     "require": {
         "php": ">=7.3"
-    },
-    "require-dev": {
-        "../../../vendor/friendsofphp/php-cs-fixer": "^3.0",
-        "../../../vendor/mockery/mockery": "^1.0",
-        "../../../vendor/phpstan/phpstan": "^0.12",
-        "../../../vendor/phpunit/phpunit": ">=7.0",
-        "../../../vendor/swoole/ide-helper": "dev-master",
-        "swow/swow": "dev-develop",
-        "symfony/var-dumper": "^5.1"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
