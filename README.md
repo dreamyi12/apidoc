@@ -1,5 +1,5 @@
-# component-creater
+# 1.安装插件
 
 ```
-composer create-project hyperf/component-creater
+composer require dreamyi12/apidoc
 ```
