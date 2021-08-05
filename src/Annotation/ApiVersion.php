@@ -1,0 +1,34 @@
+<?php
+/**
+ * Copyright (c) 2020 LKK All rights reserved
+ * User: kakuilan
+ * Date: 2020/3/6
+ * Time: 16:27
+ * Desc:
+ */
+
+declare(strict_types=1);
+
+namespace Dreamyi12\ApiDoc\Annotation;
+
+use Hyperf\Di\Annotation\AbstractAnnotation;
+
+/**
+ * @Annotation
+ * @Target({"CLASS"})
+ */
+class ApiVersion extends AbstractAnnotation {
+
+    /**
+     * @var string 分组名称,只能由英文、数字和下划线组成
+     */
+    public $group;
+
+
+    /**
+     * @var string 分组版本描述
+     */
+    public $description = '';
+
+
+}

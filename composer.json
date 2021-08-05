@@ -1,0 +1,48 @@
+{
+    "name": "dreamyi12/apidoc",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "hyperf"
+    ],
+    "description": "",
+    "autoload": {
+        "psr-4": {
+            "Dreamyi12\\ApiDoc\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HyperfTest\\": "tests"
+        }
+    },
+    "require": {
+        "php": ">=7.3"
+    },
+    "require-dev": {
+        "../../../vendor/friendsofphp/php-cs-fixer": "^3.0",
+        "../../../vendor/mockery/mockery": "^1.0",
+        "../../../vendor/phpstan/phpstan": "^0.12",
+        "../../../vendor/phpunit/phpunit": ">=7.0",
+        "../../../vendor/swoole/ide-helper": "dev-master",
+        "swow/swow": "dev-develop",
+        "symfony/var-dumper": "^5.1"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "phpunit -c phpunit.xml --colors=always",
+        "analyse": "phpstan analyse --memory-limit 1024M -l 0 src",
+        "cs-fix": "php-cs-fixer fix $1"
+    },
+    "extra": {
+        "hyperf": {
+            "config": "Dreamyi12\\ApiDoc\\ConfigProvider"
+        }
+    }
+}
