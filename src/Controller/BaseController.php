@@ -16,6 +16,7 @@ use Dreamyi12\ApiDoc\Swagger\Swagger;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
+use Hyperf\Utils\Context;
 use Kph\Helpers\ArrayHelper;
 use Kph\Helpers\ConvertHelper;
 use Kph\Helpers\StringHelper;
@@ -230,4 +231,9 @@ abstract class BaseController extends BaseObject implements ControllerInterface 
     //    }
 
 
+    protected function getCondition()
+    {
+        $where = Context::get('validator.where');
+        if(empty($where)) return false;
+    }
 }

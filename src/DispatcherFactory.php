@@ -13,38 +13,24 @@ namespace Dreamyi12\ApiDoc;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Dreamyi12\ApiDoc\Annotation\ApiController;
-use Dreamyi12\ApiDoc\Annotation\ApiResponse;
 use Dreamyi12\ApiDoc\Annotation\ApiVersion;
 use Dreamyi12\ApiDoc\Annotation\Methods;
-use Dreamyi12\ApiDoc\Annotation\Param\Body;
-use Dreamyi12\ApiDoc\Annotation\Param\Form;
-use Dreamyi12\ApiDoc\Annotation\Param\Header;
-use Dreamyi12\ApiDoc\Annotation\Param\Path;
-use Dreamyi12\ApiDoc\Annotation\Param\Query;
 use Dreamyi12\ApiDoc\Annotation\Params;
-use Dreamyi12\ApiDoc\ApiAnnotation;
+use Dreamyi12\ApiDoc\Casts\Annotation\CastsClass;
 use Dreamyi12\ApiDoc\Controller\ControllerInterface;
-use Dreamyi12\ApiDoc\Exception\ValidationException;
 use Dreamyi12\ApiDoc\Swagger\Swagger;
 use Dreamyi12\ApiDoc\Validation\Validator;
 use Hyperf\Config\Config;
-use Hyperf\Contract\ConfigInterface;
-use Hyperf\Di\Annotation\AnnotationCollector;
-use Hyperf\Di\Annotation\Inject;
 use Hyperf\Di\Exception\ConflictAnnotationException;
 use Hyperf\HttpServer\Annotation\Controller;
-use Hyperf\HttpServer\Annotation\Mapping;
 use Hyperf\HttpServer\Router\DispatcherFactory as BaseDispatcherFactory;
-use Hyperf\HttpServer\Router\RouteCollector;
 use Hyperf\Server\Exception\RuntimeException as ServerRuntimeException;
 use Hyperf\Utils\ApplicationContext;
-use Hyperf\Utils\Context;
 use Hyperf\Validation\Concerns\ValidatesAttributes;
 use Kph\Consts;
 use Kph\Helpers\ArrayHelper;
 use Kph\Helpers\StringHelper;
 use Kph\Objects\BaseObject;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
@@ -145,6 +131,9 @@ class DispatcherFactory extends BaseDispatcherFactory
                 $middlewares = $this->handleMiddleware($metadata['_c']);
                 $this->parseController($className);
                 $this->handleController($className, $metadata['_c'][ApiController::class], ($metadata['_m'] ?? []), $middlewares);
+            } else if (isset($metadata['_c'][CastsClass::class])) {
+                print_r($className);
+                print_r($metadata['_c'][CastsClass::class]);
             }
         }
 
@@ -311,7 +300,7 @@ class DispatcherFactory extends BaseDispatcherFactory
                     }
                     ArrayHelper::regularSort($hyperfs, true);
                     ArrayHelper::regularSort($customs, true);
-                    if(!empty($anno->where)){
+                    if (!empty($anno->where)) {
                         $query_where[$anno->key] = $anno->where;
                     }
                     $rules[$paramType] = [
