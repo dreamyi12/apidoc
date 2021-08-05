@@ -358,9 +358,9 @@ class Validator implements ValidationInterface
         if (empty($options)) {
             return [true, $err];
         }
-        [$enumClass] = $options;
-
-        $enums = $enumClass::getEnums();
+        [$enumName] = $options;
+        $enumClass = ApplicationContext::getContainer()->get(ApiAnnotation::class)->getEnums();
+        $enums = $enumClass[$enumName]::getEnums();
         if (!isset($enums[$val])) {
             $err = $this->translator->trans('validation.enum', ['attribute' => $name]);
         }

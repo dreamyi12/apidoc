@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Dreamyi12\ApiDoc\Annotation\Casts;
+namespace Dreamyi12\ApiDoc\Annotation\Enums;
 
 use Hyperf\Di\Annotation\AbstractAnnotation;
 
@@ -17,7 +17,7 @@ use Hyperf\Di\Annotation\AbstractAnnotation;
  * @Annotation
  * @Target({"CLASS"})
  */
-class CastsClass extends AbstractAnnotation {
+class EnumClass  extends AbstractAnnotation {
 
     /**
      * 收集名称

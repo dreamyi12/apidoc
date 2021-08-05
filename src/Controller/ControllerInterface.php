@@ -23,29 +23,22 @@ interface ControllerInterface {
 
     /**
      * 操作成功响应
-     * @param array|mixed $data 要返回的数据
-     * @param string $msg 提示信息
-     * @param array $result 已有的响应结果
-     * @return array 最终响应
+     * @param array $data
+     * @param string $message
+     * @param int $code
+     * @return array
      */
-    public static function doSuccess($data = [], string $msg = 'success', array $result = []): array;
+    public function success($data = [], string $message = '', int $code = 200): array;
 
 
     /**
      * 操作失败响应
-     * @param string|int|array|mixed $code 响应码
-     * @param array $trans 翻译数据
-     * @return array 最终响应
+     * @param string $message
+     * @param int $code
+     * @return array
      */
-    public static function doFail($code = '400', array $trans = []): array;
+    public function error(string $message = '', int $code = 200): array;
 
-
-    /**
-     * 执行验证失败时响应
-     * @param string $msg 失败信息
-     * @return array 最终响应
-     */
-    public static function doValidationFail(string $msg = ''): array;
 
 
 }

@@ -27,7 +27,8 @@ use Kph\Helpers\ValidateHelper;
  * Class ApiAnnotation
  * @package Dreamyi12\ApiDoc
  */
-class ApiAnnotation {
+class ApiAnnotation
+{
 
 
     /**
@@ -56,12 +57,15 @@ class ApiAnnotation {
     private $routeCache = null;
 
 
+    private $enums;
+
     /**
      * 获取类的元数据
      * @param string $className
      * @return array|ArrayAccess|mixed|null
      */
-    public static function getClassMetadata(string $className) {
+    public static function getClassMetadata(string $className)
+    {
         return AnnotationCollector::getClassAnnotation($className, ApiController::class);
     }
 
@@ -71,10 +75,11 @@ class ApiAnnotation {
      * @param string $className
      * @return array
      */
-    public static function getVersionMetadata(string $className) {
-        $res            = [];
-        $refCls         = ReflectionManager::reflectClass($className);
-        $reader         = new AnnotationReader();
+    public static function getVersionMetadata(string $className)
+    {
+        $res = [];
+        $refCls = ReflectionManager::reflectClass($className);
+        $reader = new AnnotationReader();
         $clsAnnotations = $reader->getClassAnnotations($refCls);
         if (is_array($clsAnnotations) && !empty($clsAnnotations)) {
             foreach ($clsAnnotations as $clsAnnotation) {
@@ -100,9 +105,10 @@ class ApiAnnotation {
      * @return array
      * @throws AnnotationException
      */
-    public static function getMethodMetadata(string $className, string $methodName) {
-        $reflectMethod     = ReflectionManager::reflectMethod($className, $methodName);
-        $reader            = new AnnotationReader();
+    public static function getMethodMetadata(string $className, string $methodName)
+    {
+        $reflectMethod = ReflectionManager::reflectMethod($className, $methodName);
+        $reader = new AnnotationReader();
         $methodAnnotations = $reader->getMethodAnnotations($reflectMethod);
         return $methodAnnotations;
     }
@@ -113,7 +119,8 @@ class ApiAnnotation {
      * @param string $str
      * @return bool
      */
-    public static function isVersion(string $str): bool {
+    public static function isVersion(string $str): bool
+    {
         return empty($str) ? false : (bool)preg_match("/^(?!_)[a-zA-Z0-9_]+$/u", $str);
     }
 
@@ -123,7 +130,8 @@ class ApiAnnotation {
      * @param string $controllerClassName
      * @return string
      */
-    public static function controller2UrlPath(string $controllerClassName): string {
+    public static function controller2UrlPath(string $controllerClassName): string
+    {
         $path = strtolower($controllerClassName);
         $path = str_replace('\\', '/', $path);
         $path = str_replace('app/controller', '', $path); //去掉命名空间的前缀,如 app/controller/indexcontroller=>indexcontroller
@@ -137,7 +145,8 @@ class ApiAnnotation {
      * @param string $rule
      * @return array
      */
-    public static function parseDetailsByRule(string $rule): array {
+    public static function parseDetailsByRule(string $rule): array
+    {
         $arr = explode('|', $rule);
         array_walk($arr, function (&$item) {
             $item = trim($item);
@@ -157,7 +166,8 @@ class ApiAnnotation {
      * @param string $str
      * @return string
      */
-    public static function parseRuleName(string $str): string {
+    public static function parseRuleName(string $str): string
+    {
         //将如gt[0] 或 enum[0,1] 转换为gt, enum
         $res = preg_replace('/\[.*\]/', '', $str);
 
@@ -176,7 +186,8 @@ class ApiAnnotation {
      * @param string $key
      * @return string
      */
-    public static function getFieldByKey(string $key): string {
+    public static function getFieldByKey(string $key): string
+    {
         $arr = explode('|', $key);
         $res = $arr[0] ?? '';
         return $res;
@@ -188,8 +199,9 @@ class ApiAnnotation {
      * @param string $rule
      * @return string
      */
-    public static function getTypeByRule(string $rule): string {
-        $details   = self::parseDetailsByRule($rule);
+    public static function getTypeByRule(string $rule): string
+    {
+        $details = self::parseDetailsByRule($rule);
         $digitItem = StringHelper::dstrpos($rule, ['gt', 'gte', 'lt', 'lte', 'max', 'min', 'between'], true);
 
         if (array_intersect($details, ['integer', 'int'])) {
@@ -214,8 +226,8 @@ class ApiAnnotation {
                     //是否有规则选项,如 between:1,20 中的 :1,20
                     preg_match('/:(.*)/', $detail, $match);
                     $options = $match[1] ?? '';
-                    $arr     = explode(',', $options);
-                    $first   = $arr[0] ?? '';
+                    $arr = explode(',', $options);
+                    $first = $arr[0] ?? '';
 
                     if (ValidateHelper::isFloat($first)) {
                         return 'float';
@@ -235,7 +247,8 @@ class ApiAnnotation {
      * @param $value
      * @return string
      */
-    public static function getTypeByValue($value): string {
+    public static function getTypeByValue($value): string
+    {
         if (ValidateHelper::isInteger($value)) {
             return 'integer';
         } elseif (ValidateHelper::isFloat($value)) {
@@ -258,7 +271,8 @@ class ApiAnnotation {
      * 设置路由缓存
      * @param object $cache
      */
-    public function setRouteCache(object $cache): void {
+    public function setRouteCache(object $cache): void
+    {
         if (!is_null($cache)) {
             $this->routeCache = $cache;
         }
@@ -269,9 +283,22 @@ class ApiAnnotation {
      * 获取路由缓存
      * @return object
      */
-    public function getRouteCache(): object {
+    public function getRouteCache(): object
+    {
         return $this->routeCache;
     }
 
+    /**
+     * 设置枚举数据
+     */
+    public function setEnums($enums = [])
+    {
+        $this->enums = $enums;
+    }
 
+
+    public function getEnums()
+    {
+        return $this->enums;
+    }
 }

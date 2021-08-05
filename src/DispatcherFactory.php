@@ -14,9 +14,10 @@ namespace Dreamyi12\ApiDoc;
 use Doctrine\Common\Annotations\AnnotationException;
 use Dreamyi12\ApiDoc\Annotation\ApiController;
 use Dreamyi12\ApiDoc\Annotation\ApiVersion;
+use Dreamyi12\ApiDoc\Annotation\Casts\CastsClass;
+use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
 use Dreamyi12\ApiDoc\Annotation\Methods;
 use Dreamyi12\ApiDoc\Annotation\Params;
-use Dreamyi12\ApiDoc\Casts\Annotation\CastsClass;
 use Dreamyi12\ApiDoc\Controller\ControllerInterface;
 use Dreamyi12\ApiDoc\Swagger\Swagger;
 use Dreamyi12\ApiDoc\Validation\Validator;
@@ -61,6 +62,12 @@ class DispatcherFactory extends BaseDispatcherFactory
     private $config;
 
     /**
+     * 枚举对象
+     * @var
+     */
+    private $enums;
+
+    /**
      * API文档swagger对象
      * @var Swagger
      */
@@ -103,6 +110,14 @@ class DispatcherFactory extends BaseDispatcherFactory
         return $this->routeCache;
     }
 
+    /**
+     * 获取枚举类
+     * @return mixed
+     */
+    public function getEnums()
+    {
+        return $this->enums;
+    }
 
     /**
      * 初始化注解路由
@@ -131,9 +146,13 @@ class DispatcherFactory extends BaseDispatcherFactory
                 $middlewares = $this->handleMiddleware($metadata['_c']);
                 $this->parseController($className);
                 $this->handleController($className, $metadata['_c'][ApiController::class], ($metadata['_m'] ?? []), $middlewares);
-            } else if (isset($metadata['_c'][CastsClass::class])) {
-                print_r($className);
-                print_r($metadata['_c'][CastsClass::class]);
+            } elseif (isset($metadata['_c'][CastsClass::class])) {
+
+//                print_r($className);
+//                print_r($metadata['_c'][CastsClass::class]);
+            } elseif (isset($metadata['_c'][EnumClass::class])) {
+                $class = $metadata['_c'][EnumClass::class];
+                $this->enums[$class->name] = $className;
             }
         }
 
@@ -293,7 +312,7 @@ class DispatcherFactory extends BaseDispatcherFactory
                         // 是否hyperf验证规则
                         $hyperfMethod = 'validate' . StringHelper::toCamelCase($ruleName);
                         if (method_exists(ValidatesAttributes::class, $hyperfMethod)) {
-                            $hyperfs[$fieldName][] = $detail;
+                            $hyperfs[$anno->key][] = $detail;
                         } elseif (!in_array($detail, ArrayHelper::multiArrayValues($customs))) { //非hyperf规则,且非本组件规则
                             throw new ServerRuntimeException("The rule not defined: {$detail} [{$className}::{$action}->$fieldName]");
                         }
@@ -458,6 +477,7 @@ class DispatcherFactory extends BaseDispatcherFactory
         }
 
         $apianno->setRouteCache($cache);
+        $apianno->setEnums($this->enums);
         $this->tmp = [];
         $container = ApplicationContext::getContainer();
         $container->set(ApiAnnotation::class, $apianno);

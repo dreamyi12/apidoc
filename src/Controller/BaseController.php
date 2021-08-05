@@ -11,28 +11,21 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Controller;
 
-use Dreamyi12\ApiDoc\Annotation\ApiResponse;
-use Dreamyi12\ApiDoc\Swagger\Swagger;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Utils\Context;
-use Kph\Helpers\ArrayHelper;
-use Kph\Helpers\ConvertHelper;
-use Kph\Helpers\StringHelper;
-use Kph\Helpers\ValidateHelper;
 use Kph\Objects\BaseObject;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Server\RequestHandlerInterface;
-use ReflectionException;
 
 /**
  * Class BaseController
  * @package Dreamyi12\ApiDoc\Controller
  */
-abstract class BaseController extends BaseObject implements ControllerInterface {
+abstract class BaseController extends BaseObject implements ControllerInterface
+{
 
     use SchemaModel;
 
@@ -63,9 +56,9 @@ abstract class BaseController extends BaseObject implements ControllerInterface 
      */
     protected static $baseSchema = [
         'status' => true,
-        'msg'    => 'success',
-        'code'   => 200,
-        'data'   => [],
+        'message' => 'success',
+        'code' => 200,
+        'data' => [],
     ];
 
 
@@ -73,117 +66,46 @@ abstract class BaseController extends BaseObject implements ControllerInterface 
      * 获取结构-基本响应体(键值对数组)
      * @return array
      */
-    public static function getSchemaResponse(): array {
+    public static function getSchemaResponse(): array
+    {
         return self::$baseSchema;
     }
 
 
     /**
      * 处理接口成功数据
-     * @param array|mixed $data 要返回的数据
-     * @param string $msg 提示信息
-     * @param array $result 已有的响应结果
+     * @param array $data
+     * @param string $msg
+     * @param int $code
      * @return array
      */
-    public static function doSuccess($data = [], string $msg = 'success', array $result = []): array {
-        if (empty($result)) {
-            $result = self::getSchemaResponse();
-        }
-
-        if (is_bool($data)) {
-            $result['data'] = [];
-        } elseif (is_object($data)) {
-            $data           = ConvertHelper::object2Array($data);
-            $result['data'] = array_merge((array)$result['data'], $data);
-        } elseif (is_array($data)) {
-            $result['data'] = array_merge((array)$result['data'], $data);
-        } else {
-            $result['data'] = strval($data);
-        }
-
-        $result = [
+    public function success($data = [], string $message = '', int $code = 200): array
+    {
+        $message = is_string($data) ? $data : $message;
+        return [
             'status' => true,
-            'msg'    => $msg,
-            'code'   => 200,
-            'data'   => $result['data'],
+            'message' => $message,
+            'code' => $code,
+            'data' => $data,
         ];
-
-        return $result;
     }
 
 
     /**
      * 处理接口失败数据
-     * @param string|int|array|mixed $code 错误码(如400);或错误信息数组[错误码,提示信息],如 [400, '操作失败']
-     * @param array $trans 翻译数组
+     * @param string $message
+     * @param int $code
      * @return array
      */
-    public static function doFail($code = '400', array $trans = []): array {
-        if (is_array($code)) {
-            $msg  = end($code);
-            $code = reset($code);
-        } elseif (is_numeric($code)) {
-            $msg = trans("apihelper.{$code}", $trans);
-        } else {
-            $msg = $code;
-        }
-
-        $codeNo = ($code != $msg && is_numeric($code)) ? intval($code) : 400;
-
-        $result = [
+    public function error(string $message = '', int $code = 200): array
+    {
+        return [
             'status' => false,
-            'msg'    => strval($msg),
-            'code'   => $codeNo,
-            'data'   => [],
+            'message' => $message,
+            'code' => $code,
+            'data' => [],
         ];
-
-        return $result;
     }
-
-
-    /**
-     * 执行验证失败时响应
-     * @param string $msg 失败信息
-     * @return array
-     */
-    public static function doValidationFail(string $msg = ''): array {
-        $code = empty($msg) ? 412 : [400, $msg];
-
-        return self::doFail($code);
-    }
-
-
-    /**
-     * 根据结构名获取模型默认值
-     * @param string $schemaStr
-     * @param array $data
-     * @return array
-     */
-    public static function getDefaultDataBySchemaName(string $schemaStr, array $data = []): array {
-        $res = array_merge([], $data);
-        [$schemaName, $schemaMethod] = Swagger::extractSchemaNameMethod($schemaStr);
-        if (method_exists(static::class, $schemaMethod)) {
-            $callback   = [static::class, $schemaMethod];
-            $schemaData = call_user_func($callback);
-            if (is_array($schemaData)) {
-                $res = array_merge($res, $schemaData);
-            }
-        }
-
-        foreach ($res as &$item) {
-            if (is_array($item) && !empty($item)) {
-                $item = self::getDefaultDataBySchemaName('', $item);
-            } elseif (is_string($item) && ValidateHelper::startsWith($item, '$')) {
-                $str = StringHelper::removeBefore($item, '$', true);
-                if (ValidateHelper::isAlphaNumDash($str)) {
-                    $item = self::getDefaultDataBySchemaName($str, []);
-                }
-            }
-        }
-
-        return $res;
-    }
-
 
     /**
      * 初始化方法(在具体动作之前执行).
@@ -234,6 +156,6 @@ abstract class BaseController extends BaseObject implements ControllerInterface 
     protected function getCondition()
     {
         $where = Context::get('validator.where');
-        if(empty($where)) return false;
+        if (empty($where)) return false;
     }
 }
