@@ -86,6 +86,15 @@ class ConditionHandle extends ConditionAbstract
      * @param WhereParams $whereParams
      * @return Builder
      */
+    public function like(WhereParams $whereParams): Builder
+    {
+        return $this->builder->where($whereParams->getField(), "like", "%".$whereParams->getValue()."%", $whereParams->getMode());
+    }
+
+    /**
+     * @param WhereParams $whereParams
+     * @return Builder
+     */
     public function between(WhereParams $whereParams): Builder
     {
         $value = is_array($whereParams->getValue()) ? $whereParams->getValue() : explode($whereParams->getSymbol(), $whereParams->getValue());

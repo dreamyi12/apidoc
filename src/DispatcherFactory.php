@@ -137,8 +137,8 @@ class DispatcherFactory extends BaseDispatcherFactory
         } elseif (!class_exists($baseCtrlClass)) {
             throw new ServerRuntimeException("class: {$baseCtrlClass} does not exist.");
         }
-
         $routes = [];
+        $apis = [];
         foreach ($collector as $className => $metadata) {
             //优先处理枚举类
             if (isset($metadata['_c'][EnumClass::class])) {
@@ -149,16 +149,19 @@ class DispatcherFactory extends BaseDispatcherFactory
             if (isset($metadata['_c'][ApiController::class])) {
                 //控制器中间件
                 $middlewares = $this->handleMiddleware($metadata['_c']);
-                $this->parseController($className);
-                $this->handleController($className, $metadata['_c'][ApiController::class], ($metadata['_m'] ?? []), $middlewares);
+                $apis [] = ['middlewares' => $middlewares, 'class_name' => $className, 'metadata' => $metadata];
             }
             if (isset($metadata['_c'][CastsClass::class])) {
-
 //                print_r($className);
 //                print_r($metadata['_c'][CastsClass::class]);
             }
 
         }
+        foreach ($apis as $api) {
+            $this->parseController($api['class_name']);
+            $this->handleController($api['class_name'], $api['metadata']['_c'][ApiController::class], ($api['metadata']['_m'] ?? []), $api['middlewares']);
+        }
+
 
         $this->swagger->saveJson();
     }
@@ -324,7 +327,7 @@ class DispatcherFactory extends BaseDispatcherFactory
                     ArrayHelper::regularSort($hyperfs, true);
                     ArrayHelper::regularSort($customs, true);
                     if (!empty($anno->where)) {
-                        $query_where[$anno->key] = $anno->where;
+                        $query_where[$fieldName] = $anno->where;
                     }
                     $rules[$paramType] = [
                         'where' => $query_where,

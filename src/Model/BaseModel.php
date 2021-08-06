@@ -4,6 +4,7 @@ namespace Dreamyi12\ApiDoc\Model;
 
 use Dreamyi12\ApiDoc\Condition\ConditionHandle;
 use Hyperf\DbConnection\Model\Model;
+use Hyperf\Utils\Context;
 use Hyperf\Utils\Str;
 
 class BaseModel extends Model

@@ -25,6 +25,8 @@ interface ConditionInterface
 
     public function likeRight(WhereParams $whereParams): Builder;
 
+    public function like(WhereParams $whereParams): Builder;
+
     public function between(WhereParams $whereParams): Builder;
 
     public function notBetween(WhereParams $whereParams): Builder;
