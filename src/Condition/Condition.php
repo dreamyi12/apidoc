@@ -14,19 +14,10 @@ class Condition
     private $whereParams;
 
     /**
-     * Condition constructor.
-     */
-    public function __construct()
-    {
-        $this->initialize();
-    }
-
-    /**
      * Initialization parameters
      */
     public function initialize()
     {
-
         $where = self::getValidatorWhere();
         $data = self::getValidatorData();
         foreach ($where as $field => $option) {
@@ -43,6 +34,9 @@ class Condition
             if (!$whereParam->getValue() && isset($data[$field]))
                 $whereParam->setValue($data[$field]);
 
+            if (empty($whereParam->getValue())) {
+                continue;
+            }
             $this->whereParams[$field] = $whereParam;
         }
     }

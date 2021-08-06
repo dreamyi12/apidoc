@@ -40,8 +40,8 @@ abstract class ConditionAbstract implements ConditionInterface
      */
     public function handle($where = null): ConditionInterface
     {
+        $this->condition->initialize();
         $where = !empty($where) ? $where : $this->condition->getWhereParams();
-
         if (empty($where)) return $this;
         $with = [];
         $when = [];
