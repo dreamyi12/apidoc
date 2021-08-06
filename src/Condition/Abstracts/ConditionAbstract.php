@@ -27,8 +27,6 @@ abstract class ConditionAbstract implements ConditionInterface
      */
     public function __construct(Builder $builder)
     {
-        $container = ApplicationContext::getContainer();
-        $this->condition = $container->get(Condition::class);
         $this->builder = $builder;
     }
 
@@ -40,8 +38,7 @@ abstract class ConditionAbstract implements ConditionInterface
      */
     public function handle($where = null): ConditionInterface
     {
-        $this->condition->initialize();
-        $where = !empty($where) ? $where : $this->condition->getWhereParams();
+        $where = !empty($where) ? $where : (new Condition())->getWhereParams();
         if (empty($where)) return $this;
         $with = [];
         $when = [];

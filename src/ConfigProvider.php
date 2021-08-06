@@ -42,12 +42,23 @@ class ConfigProvider {
                     'destination' => BASE_PATH . '/storage/languages/en/apihelper.php', //目标路径
                 ],
                 [
+                    'id'          => 'validation languages en trans',
+                    'description' => 'The translate  for languages validation.',
+                    'source'      => __DIR__ . '/../publish/languages/en/validation.php', //源文件
+                    'destination' => BASE_PATH . '/storage/languages/en/validation.php', //目标路径
+                ],
+                [
                     'id'          => 'validation cn trans',
                     'description' => 'The translate for validation.',
                     'source'      => __DIR__ . '/../publish/languages/zh_CN/apihelper.php', //源文件
                     'destination' => BASE_PATH . '/storage/languages/zh_CN/apihelper.php', //目标路径
                 ],
-
+                [
+                    'id'          => 'validation languages cn trans',
+                    'description' => 'The translate  for languages validation.',
+                    'source'      => __DIR__ . '/../publish/languages/zh_CN/validation.php', //源文件
+                    'destination' => BASE_PATH . '/storage/languages/zh_CN/validation.php', //目标路径
+                ],
                 //swagger-ui
                 [
                     'id'          => 'icon-16',

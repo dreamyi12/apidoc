@@ -14,6 +14,14 @@ class Condition
     private $whereParams;
 
     /**
+     * Condition constructor.
+     */
+    public function __construct()
+    {
+        $this->initialize();
+    }
+
+    /**
      * Initialization parameters
      */
     public function initialize()
