@@ -157,7 +157,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
                 $data = [Body::NAME => $request->getBody()->getContents()];
                 [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeBody, $data, [], $controllerInstance);
                 if (!empty($error)) {
-                    return $doAfter($this->response->json($baseCtrlClass::doValidationFail($error)));
+                    return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
                 $request = $request->withBody(new SwooleStream($data[Body::NAME] ?? ''));
             }
@@ -174,7 +174,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
             if (isset($ruleObj->$ctrlAct->$typeHeader)) {
                 [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeHeader, $headers, $allData, $controllerInstance);
                 if (!empty($error)) {
-                    return $doAfter($this->response->json($baseCtrlClass::doValidationFail($error)));
+                    return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
             }
 
@@ -183,7 +183,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
                 $pathData = $routes[2] ?? [];
                 [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typePath, $pathData, $allData, $controllerInstance);
                 if (!empty($error)) {
-                    return $doAfter($this->response->json($baseCtrlClass::doValidationFail($error)));
+                    return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
             }
 
@@ -194,7 +194,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
                 }
                 [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeQuery, $queryData, $allData, $controllerInstance);
                 if (!empty($error)) {
-                    return $doAfter($this->response->json($baseCtrlClass::doValidationFail($error)));
+                    return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
                 $request = $request->withQueryParams($data);
             }
@@ -206,7 +206,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
                 }
                 [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeForm, $postData, $allData, $controllerInstance);
                 if (!empty($error)) {
-                    return $doAfter($this->response->json($baseCtrlClass::doValidationFail($error)));
+                    return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
                 $request = $request->withParsedBody($data);
             }
@@ -216,7 +216,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
             if (isset($ruleObj->$ctrlAct->$typeFile)) {
                 [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeFile, $request->getUploadedFiles(), $allData, $controllerInstance);
                 if (!empty($error)) {
-                    return $doAfter($this->response->json($baseCtrlClass::doValidationFail($error)));
+                    return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
                 $request = $request->withUploadedFiles($data);
             }

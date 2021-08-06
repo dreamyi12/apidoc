@@ -11,10 +11,13 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Controller;
 
+use Dreamyi12\ApiDoc\Swagger\Swagger;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Utils\Context;
+use Kph\Helpers\StringHelper;
+use Kph\Helpers\ValidateHelper;
 use Kph\Objects\BaseObject;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
@@ -107,6 +110,14 @@ abstract class BaseController extends BaseObject implements ControllerInterface
         ];
     }
 
+    public static function validationFail(string $message = '',int $code = 400){
+        return [
+            'status' => false,
+            'message' => $message,
+            'code' => $code,
+            'data' => [],
+        ];
+    }
     /**
      * 初始化方法(在具体动作之前执行).
      * 不会中止后续具体动作的执行.
@@ -151,7 +162,36 @@ abstract class BaseController extends BaseObject implements ControllerInterface
     //        $code = $response->getStatusCode();
     //        printf("after action finish: code[%d] url[%s]\r", $code, $uri);
     //    }
+    /**
+     * 根据结构名获取模型默认值
+     * @param string $schemaStr
+     * @param array $data
+     * @return array
+     */
+    public static function getDefaultDataBySchemaName(string $schemaStr, array $data = []): array {
+        $res = array_merge([], $data);
+        [$schemaName, $schemaMethod] = Swagger::extractSchemaNameMethod($schemaStr);
+        if (method_exists(static::class, $schemaMethod)) {
+            $callback   = [static::class, $schemaMethod];
+            $schemaData = call_user_func($callback);
+            if (is_array($schemaData)) {
+                $res = array_merge($res, $schemaData);
+            }
+        }
 
+        foreach ($res as &$item) {
+            if (is_array($item) && !empty($item)) {
+                $item = self::getDefaultDataBySchemaName('', $item);
+            } elseif (is_string($item) && ValidateHelper::startsWith($item, '$')) {
+                $str = StringHelper::removeBefore($item, '$', true);
+                if (ValidateHelper::isAlphaNumDash($str)) {
+                    $item = self::getDefaultDataBySchemaName($str, []);
+                }
+            }
+        }
+
+        return $res;
+    }
 
     protected function getCondition()
     {

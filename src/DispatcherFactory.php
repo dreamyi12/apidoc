@@ -140,20 +140,24 @@ class DispatcherFactory extends BaseDispatcherFactory
 
         $routes = [];
         foreach ($collector as $className => $metadata) {
+            //优先处理枚举类
+            if (isset($metadata['_c'][EnumClass::class])) {
+                $class = $metadata['_c'][EnumClass::class];
+                $this->enums[$class->name] = $className;
+            }
             //是否API控制器
             if (isset($metadata['_c'][ApiController::class])) {
                 //控制器中间件
                 $middlewares = $this->handleMiddleware($metadata['_c']);
                 $this->parseController($className);
                 $this->handleController($className, $metadata['_c'][ApiController::class], ($metadata['_m'] ?? []), $middlewares);
-            } elseif (isset($metadata['_c'][CastsClass::class])) {
+            }
+            if (isset($metadata['_c'][CastsClass::class])) {
 
 //                print_r($className);
 //                print_r($metadata['_c'][CastsClass::class]);
-            } elseif (isset($metadata['_c'][EnumClass::class])) {
-                $class = $metadata['_c'][EnumClass::class];
-                $this->enums[$class->name] = $className;
             }
+
         }
 
         $this->swagger->saveJson();
@@ -297,7 +301,7 @@ class DispatcherFactory extends BaseDispatcherFactory
                         //是否本组件的验证规则
                         $ruleMethod = 'rule_' . $ruleName;
                         if (method_exists(Validator::class, $ruleMethod)) {
-                            $customs[$fieldName][] = $detail;
+                            $customs[$anno->key][] = $detail;
                         }
 
                         // cb_xxx,调用控制器的方法xxx
@@ -405,11 +409,11 @@ class DispatcherFactory extends BaseDispatcherFactory
                         /** @var ApiVersion $version */
                         foreach ($versions as $version) {
                             $vpath = $useVerPath ? ('/' . $version->group . $path) : $path;
-                            $this->swagger->addPath($className, $action, $vpath, $version);
+                            $this->swagger->addPath($className, $action, $vpath, $this->enums, $version);
                             $addPathToRouter($anno->methods, $vpath, [$className, $action], ['middleware' => $middlewares,]);
                         }
                     } else {
-                        $this->swagger->addPath($className, $action, $path);
+                        $this->swagger->addPath($className, $action, $path, $this->enums);
                         $addPathToRouter($anno->methods, $path, [$className, $action], ['middleware' => $middlewares,]);
                     }
                 }

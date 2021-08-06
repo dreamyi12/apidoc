@@ -37,7 +37,8 @@ use ReflectionMethod;
  * Class Swagger
  * @package Dreamyi12\ApiDoc\Swagger
  */
-class Swagger {
+class Swagger
+{
 
     /**
      * 全局配置
@@ -63,8 +64,9 @@ class Swagger {
     /**
      * Swagger constructor.
      */
-    public function __construct() {
-        $this->confGlobal  = ApplicationContext::getContainer()->get(ConfigInterface::class);
+    public function __construct()
+    {
+        $this->confGlobal = ApplicationContext::getContainer()->get(ConfigInterface::class);
         $this->confSwagger = $this->confGlobal->get('apihelper.swagger');
 
         $this->initDefinitions();
@@ -74,8 +76,9 @@ class Swagger {
     /**
      * 初始化常用模型定义
      */
-    public function initDefinitions() {
-        $this->confSwagger['definitions']   = [];
+    public function initDefinitions()
+    {
+        $this->confSwagger['definitions'] = [];
         $this->confSwagger['schemaMethods'] = [];
 
         //基本响应体
@@ -91,7 +94,7 @@ class Swagger {
         $properties = [];
         foreach ($baseSchema as $key => $val) {
             $item = [
-                'type'    => ApiAnnotation::getTypeByValue($val),
+                'type' => ApiAnnotation::getTypeByValue($val),
                 'example' => is_array($val) ? [] : (is_object($val) ? new \stdClass() : $val),
             ];
 
@@ -107,7 +110,7 @@ class Swagger {
         }
 
         $response = [
-            'type'       => 'object',
+            'type' => 'object',
             'properties' => $properties,
         ];
 
@@ -134,13 +137,14 @@ class Swagger {
      * @return mixed|array|object
      * @throws ReflectionException
      */
-    public function parseSchemaModelByName(string $controller, string $schemaStr, array $methods = []) {
+    public function parseSchemaModelByName(string $controller, string $schemaStr, array $methods = [])
+    {
         if (empty($methods)) {
             $methods = self::getSchemaMethods($baseCtrlClass);
         }
 
         [$schemaName, $schemaMethod] = self::extractSchemaNameMethod($schemaStr);
-        $callback   = "{$controller}::{$schemaMethod}";
+        $callback = "{$controller}::{$schemaMethod}";
         $schemaData = call_user_func($callback);
         if (!is_array($schemaData)) { //结构模型方法的返回值必须是数组
             throw new RuntimeException("{$callback} the return value type must be an array.");
@@ -149,7 +153,7 @@ class Swagger {
         $properties = self::parseSchemaNestedData($schemaData, $methods);
 
         //添加到swagger模型定义列表
-        $type        = ApiAnnotation::getTypeByValue($schemaData);
+        $type = ApiAnnotation::getTypeByValue($schemaData);
         $schemaModel = [
             'type' => $type,
         ];
@@ -170,7 +174,8 @@ class Swagger {
      * @param string $schemaName
      * @return array
      */
-    public function getDefinitionBySchemaName(string $schemaName): array {
+    public function getDefinitionBySchemaName(string $schemaName): array
+    {
         return $this->confSwagger['definitions'][$schemaName] ?? [];
     }
 
@@ -181,19 +186,20 @@ class Swagger {
      * @param array $methods
      * @return array
      */
-    public static function parseSchemaNestedData(array $arr, array $methods): array {
+    public static function parseSchemaNestedData(array $arr, array $methods): array
+    {
         ArrayHelper::regularSort($arr);
         foreach ($arr as &$val) {
             $oriVal = $val;
             $newVal = null;
             if (is_array($val) && !empty($val)) {
-                $ret      = self::parseSchemaNestedData($val, $methods);
+                $ret = self::parseSchemaNestedData($val, $methods);
                 $subitems = implode('', ArrayHelper::multiArrayValues($ret));
 
                 //一维数组,且元素是引用结构
                 if (ValidateHelper::isOneDimensionalArray($val) && stripos($subitems, 'definitions')) {
                     $newVal = [
-                        'type'  => 'array',
+                        'type' => 'array',
                         'items' => current($ret),
                     ];
                 }
@@ -211,7 +217,7 @@ class Swagger {
             }
 
             if (is_null($newVal)) {
-                $type   = ApiAnnotation::getTypeByValue($val);
+                $type = ApiAnnotation::getTypeByValue($val);
                 $newVal = [
                     'type' => $type,
                 ];
@@ -239,7 +245,8 @@ class Swagger {
      * @param array $methods
      * @return array|string|mixed
      */
-    public static function parseExample($val, array $methods = []) {
+    public static function parseExample($val, array $methods = [])
+    {
         if (is_object($val) && !ValidateHelper::isEmptyObject($val)) {
             $val = ConvertHelper::object2Array($val);
         }
@@ -271,15 +278,16 @@ class Swagger {
      * @param string $str
      * @return array
      */
-    public static function extractSchemaNameMethod(string $str): array {
+    public static function extractSchemaNameMethod(string $str): array
+    {
         $schemaMethod = $schemaName = '';
         if (!empty($str)) {
             if (ValidateHelper::startsWith($str, ApiAnnotation::$schemaMethodPrefix)) {
                 $schemaMethod = $str;
-                $schemaName   = str_replace(ApiAnnotation::$schemaMethodPrefix, '', $str);
+                $schemaName = str_replace(ApiAnnotation::$schemaMethodPrefix, '', $str);
             } else {
                 // 处理带引用的结构名,如 $Person => Person
-                $schemaName   = self::turnRefSchema2Name($str);
+                $schemaName = self::turnRefSchema2Name($str);
                 $schemaMethod = ApiAnnotation::$schemaMethodPrefix . $schemaName;
             }
         }
@@ -294,7 +302,8 @@ class Swagger {
      * @return array
      * @throws ReflectionException
      */
-    public static function getSchemaMethods(string $controller): array {
+    public static function getSchemaMethods(string $controller): array
+    {
         $methods = BaseObject::getClassMethods($controller, ReflectionMethod::IS_STATIC | ReflectionMethod::IS_PUBLIC);
         $methods = array_filter($methods, function ($v) {
             // 以'getSchema'为前缀的公共静态方法
@@ -310,7 +319,8 @@ class Swagger {
      * @param string $path
      * @return string
      */
-    public static function turnPath(string $path): string {
+    public static function turnPath(string $path): string
+    {
         $path = str_replace(['{', '}'], '', $path);
         return $path;
     }
@@ -321,7 +331,8 @@ class Swagger {
      * @param string $val
      * @return string
      */
-    public static function turnRefSchema2Name(string $val): string {
+    public static function turnRefSchema2Name(string $val): string
+    {
         if (!empty($val)) {
             $val = StringHelper::removeBefore($val, '$', true);
             $val = ucfirst(StringHelper::toCamelCase($val));
@@ -336,7 +347,8 @@ class Swagger {
      * @param string $val
      * @return string
      */
-    public static function turnName2RefSchema(string $val): string {
+    public static function turnName2RefSchema(string $val): string
+    {
         if (!empty($val) && !ValidateHelper::startsWith($val, '$')) {
             $val = '$' . $val;
         }
@@ -353,13 +365,14 @@ class Swagger {
      * @param mixed $version ApiVersion
      * @throws AnnotationException
      */
-    public function addPath(string $className, string $methodName, string $path, $version = null): void {
+    public function addPath(string $className, string $methodName, string $path, $enums = [], $version = null): void
+    {
         //获取类文件的注解信息
-        $classAnnotation   = ApiAnnotation::getClassMetadata($className);
+        $classAnnotation = ApiAnnotation::getClassMetadata($className);
         $methodAnnotations = ApiAnnotation::getMethodMetadata($className, $methodName);
 
-        $params    = [];
-        $paths     = [];
+        $params = [];
+        $paths = [];
         $responses = [];
 
         //检查版本号是否合法
@@ -396,16 +409,16 @@ class Swagger {
         //分组标签
         $tagName = $classAnnotation->tag ?: $className;
         $tagInfo = ['name' => $tagName, 'description' => $classAnnotation->description,];
-        $method  = strtolower($reqMethod->methods[0]);
+        $method = strtolower($reqMethod->methods[0]);
 
         $this->confSwagger['tags'][$tagName] = $tagInfo;
         $paths[$path][$method] = [
-            'tags'        => [$tagName,],
-            'summary'     => $reqMethod->summary,
-            'parameters'  => $this->makeParameters($params, $path), //接口默认接收的MIME类型
-            'consumes'    => ['application/x-www-form-urlencoded', 'application/json', 'multipart/form-data',], //接口默认的响应类型
-            'produces'    => ['application/json',],
-            'responses'   => $this->makeResponses($responses, $path, $method),
+            'tags' => [$tagName,],
+            'summary' => $reqMethod->summary,
+            'parameters' => $this->makeParameters($params, $path, $enums), //接口默认接收的MIME类型
+            'consumes' => ['application/x-www-form-urlencoded', 'application/json', 'multipart/form-data',], //接口默认的响应类型
+            'produces' => ['application/json',],
+            'responses' => $this->makeResponses($responses, $path, $method),
             'description' => $reqMethod->description,
         ];
         if ($hasVersion) {
@@ -423,7 +436,8 @@ class Swagger {
      * @param string $desc 版本描述
      * @param array $paths 路由信息
      */
-    protected function addGroupInfo(string $name, string $desc, array $paths = []): void {
+    protected function addGroupInfo(string $name, string $desc, array $paths = []): void
+    {
         if (empty($name)) {
             return;
         }
@@ -449,7 +463,8 @@ class Swagger {
      * @param string $parentName 父参数名称
      * @return bool
      */
-    public static function hasDotSubParamter(array $params, string $parentName): bool {
+    public static function hasDotSubParamter(array $params, string $parentName): bool
+    {
         /** @var \Dreamyi12\ApiDoc\Annotation\Params $item */
         foreach ($params as $item) {
             if (strpos($item->name, '.') && strpos($item->name, $parentName) === 0) {
@@ -467,15 +482,14 @@ class Swagger {
      * @param string $path
      * @return array
      */
-    public function makeParameters(array $params, string $path): array {
+    public function makeParameters(array $params, string $path, $enums = []): array
+    {
         $path = self::turnPath($path);
-
         $parameters = [];
-
         /** @var \Dreamyi12\ApiDoc\Annotation\Params $item */
         foreach ($params as $item) {
             //将如row.usr.name 转换为 row[usr][name]
-            $hasDot  = strpos($item->name, '.');
+            $hasDot = strpos($item->name, '.');
             $dotName = '';
             if ($hasDot) {
                 $arr = explode('.', $item->name);
@@ -488,15 +502,15 @@ class Swagger {
             }
 
             $property = [
-                'in'          => $item->in,
-                'name'        => $hasDot ? $dotName : $item->name,
+                'in' => $item->in,
+                'name' => $hasDot ? $dotName : $item->name,
                 'description' => $item->description,
-                'required'    => $item->required,
-                'type'        => $item->type,
+                'required' => $item->required,
+                'type' => $item->type,
             ];
             if ($item->type == 'array') {
-                $property['name']             = "{$item->name}[]";
-                $property['items']            = new \stdClass();
+                $property['name'] = "{$item->name}[]";
+                $property['items'] = new \stdClass();
                 $property['collectionFormat'] = 'multi';
             }
 
@@ -507,10 +521,10 @@ class Swagger {
                     continue;
                 }
 
-                $property['name']             = "{$item->name}";
-                $property['type']             = 'array';
-                $property['items']            = new \stdClass();
-                $property['required']         = false;
+                $property['name'] = "{$item->name}";
+                $property['type'] = 'array';
+                $property['items'] = new \stdClass();
+                $property['required'] = false;
                 $property['collectionFormat'] = 'multi';
             }
 
@@ -521,8 +535,11 @@ class Swagger {
             }
 
             if (!is_null($item->enum)) {
-                [$enumClass] = $item->enum;
-                $parameters[$item->name]['enum'] = array_flip($enumClass::getEnums());
+                [$enumName] = $item->enum;
+                if(!isset($enums[$enumName])){
+                    throw new RuntimeException("The enumeration `{$enumName}` class is not defined ");
+                }
+                $parameters[$item->name]['enum'] = array_flip($enums[$enumName]::getEnums());
             }
 
             //字段值举例
@@ -542,26 +559,27 @@ class Swagger {
      * @param string $method
      * @return array
      */
-    public function makeResponses(array $responses, string $path, string $method): array {
+    public function makeResponses(array $responses, string $path, string $method): array
+    {
         $path = self::turnPath($path);
         $resp = [];
 
         //基本响应体
         /** @var \Dreamyi12\ApiDoc\Controller\ControllerInterface $baseCtrlClass */
         $baseCtrlClass = $this->confGlobal->get('apihelper.api.base_controller');
-        $baseSchema    = call_user_func([$baseCtrlClass, 'getSchemaResponse']);
+        $baseSchema = call_user_func([$baseCtrlClass, 'getSchemaResponse']);
 
         /** @var ApiResponse $item */
         foreach ($responses as $item) {
             $resp[$item->code] = ['description' => $item->description,];
-            $modelDefiniName   = implode('', array_map('ucfirst', explode('/', $path))) . ucfirst($method) . 'Response' . $item->code;
+            $modelDefiniName = implode('', array_map('ucfirst', explode('/', $path))) . ucfirst($method) . 'Response' . $item->code;
             if ($item->schema) {
                 //引用已定义的模型
                 if (is_array($item->schema) && array_key_exists('$ref', $item->schema) && array_key_exists($item->schema['$ref'], $this->confSwagger['definitions'])) {
                     //检查结构是否和基本响应体结构相同
                     [$schemaName, $schemaMethod] = self::extractSchemaNameMethod($item->schema['$ref']);
                     $controllerClass = $this->confSwagger['schemaMethods'][$schemaMethod] ?? '';
-                    $schemaData      = call_user_func([$controllerClass, $schemaMethod]);
+                    $schemaData = call_user_func([$controllerClass, $schemaMethod]);
                     if (!ArrayHelper::compareSchema($baseSchema, $schemaData)) {
                         throw new RuntimeException("[{$schemaMethod}] must have the same structure as the return value of [getSchemaResponse]");
                     }
@@ -570,7 +588,7 @@ class Swagger {
                     $item->refValue = self::turnRefSchema2Name(strval($item->refValue));
                     if (isset($schemaData[$item->refKey]) && !empty($item->refValue) && array_key_exists($item->refValue, $this->confSwagger['definitions'])) {
                         $schemaData[$item->refKey] = self::turnName2RefSchema($item->refValue);
-                        $ret                       = $this->responseSchemaTodefinition($schemaData, $modelDefiniName);
+                        $ret = $this->responseSchemaTodefinition($schemaData, $modelDefiniName);
                         if ($ret) {
                             $resp[$item->code]['schema']['$ref'] = '#/definitions/' . $modelDefiniName;
                             break;
@@ -598,29 +616,30 @@ class Swagger {
      * @param int $level
      * @return array|bool
      */
-    public function responseSchemaTodefinition($schema, $modelName, $level = 0) {
+    public function responseSchemaTodefinition($schema, $modelName, $level = 0)
+    {
         if (!$schema) {
             return false;
         }
         $definition = [];
         foreach ($schema as $key => $val) {
-            $_key             = str_replace('_', '', $key);
-            $property         = [];
+            $_key = str_replace('_', '', $key);
+            $property = [];
             $property['type'] = gettype($val);
             if (is_array($val)) {
                 $definitionName = $modelName . ucfirst($_key);
                 if ($property['type'] == 'array' && isset($val[0])) {
                     if (is_array($val[0])) {
-                        $property['type']          = 'array';
-                        $ret                       = $this->responseSchemaTodefinition($val[0], $definitionName, 1);
+                        $property['type'] = 'array';
+                        $ret = $this->responseSchemaTodefinition($val[0], $definitionName, 1);
                         $property['items']['$ref'] = '#/definitions/' . $definitionName;
                     } else {
-                        $property['type']          = 'array';
+                        $property['type'] = 'array';
                         $property['items']['type'] = gettype($val[0]);
                     }
                 } else {
                     $property['type'] = 'object';
-                    $ret              = $this->responseSchemaTodefinition($val, $definitionName, 1);
+                    $ret = $this->responseSchemaTodefinition($val, $definitionName, 1);
                     $property['$ref'] = '#/definitions/' . $definitionName;
                 }
                 if (isset($ret)) {
@@ -629,7 +648,7 @@ class Swagger {
             } else {
                 $isRef = false;
                 if (is_string($val) && ValidateHelper::startsWith($val, '$')) {
-                    $val   = self::turnRefSchema2Name($val);
+                    $val = self::turnRefSchema2Name($val);
                     $isRef = array_key_exists($val, $this->confSwagger['definitions']);
                 }
 
@@ -654,12 +673,13 @@ class Swagger {
     /**
      * 生成json文件
      */
-    public function saveJson() {
+    public function saveJson()
+    {
         $this->confSwagger['tags'] = array_unique(array_values($this->confSwagger['tags'] ?? []), SORT_REGULAR);
         ArrayHelper::regularSort($this->confSwagger['tags']);
 
-        $saveDir     = DirectoryHelper::formatDir($this->confSwagger['output_dir']);
-        $baseName    = $this->confSwagger['output_basename'] ?? 'swagger';
+        $saveDir = DirectoryHelper::formatDir($this->confSwagger['output_dir']);
+        $baseName = $this->confSwagger['output_basename'] ?? 'swagger';
         $openSwagger = boolval($this->confSwagger['output_json']);
 
         if (empty($saveDir)) {
@@ -672,9 +692,9 @@ class Swagger {
         if ($openSwagger) {
             $domain = OsHelper::getDomain($this->confSwagger['host']);
             $urlArr = parse_url($this->confSwagger['host']);
-            $port   = $urlArr['port'] ?? '';
-            $full   = $domain . ($port ? ":" . $port : '');
-            $urls   = [];
+            $port = $urlArr['port'] ?? '';
+            $full = $domain . ($port ? ":" . $port : '');
+            $urls = [];
 
             $this->confSwagger['host'] = $full;
 
@@ -684,9 +704,9 @@ class Swagger {
             $swaggerAll = $this->confSwagger; //包含全部版本
             // 生成版本分组文件
             foreach ($this->groups as $group) {
-                $swaggerData          = $this->confSwagger;
+                $swaggerData = $this->confSwagger;
                 $swaggerData['paths'] = array_merge_recursive(($swaggerData['paths'] ?? []), $group['paths']);
-                $swaggerAll['paths']  = array_merge_recursive(($swaggerAll['paths'] ?? []), $group['paths']);
+                $swaggerAll['paths'] = array_merge_recursive(($swaggerAll['paths'] ?? []), $group['paths']);
                 // 当前版本的tags
                 $currTags = $versionTags[$group['name']] ?? [];
                 if (!empty($currTags)) {
@@ -709,10 +729,10 @@ class Swagger {
 
             // 修改index.html
             $htmlFile = $saveDir . 'index.html';
-            $content  = file_get_contents($htmlFile);
-            $urlStr   = json_encode($urls, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-            $urlStr   = "urls:" . str_replace("\\/", "/", $urlStr);
-            $content  = preg_replace("/urls:\[.*\]/is", $urlStr, $content, -1);
+            $content = file_get_contents($htmlFile);
+            $urlStr = json_encode($urls, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $urlStr = "urls:" . str_replace("\\/", "/", $urlStr);
+            $content = preg_replace("/urls:\[.*\]/is", $urlStr, $content, -1);
             file_put_contents($htmlFile, $content);
         } else {
             // 删除 *.json文件
