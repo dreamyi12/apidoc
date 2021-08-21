@@ -539,7 +539,7 @@ class Swagger
                 if(!isset($enums[$enumName])){
                     throw new RuntimeException("The enumeration `{$enumName}` class is not defined ");
                 }
-                $parameters[$item->name]['enum'] = array_flip($enums[$enumName]::getEnums());
+                $parameters[$item->name]['enum'] = array_keys($enums[$enumName]::getEnums());
             }
 
             //字段值举例

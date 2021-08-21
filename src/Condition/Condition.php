@@ -11,7 +11,7 @@ class Condition
      * Conditional parameter object array
      * @var array
      */
-    private array $whereParams;
+    private $whereParams = [];
 
     /**
      * Condition constructor.

@@ -3,60 +3,62 @@
 namespace Dreamyi12\ApiDoc\Enum;
 
 use Hyperf\Constants\AbstractConstants;
+use Hyperf\Constants\ConstantsCollector;
 
-class EnumConstants extends AbstractConstants
+abstract class EnumConstants extends AbstractConstants
 {
-    /**
-     * @var array
-     */
-    protected $correspond = [];
-    /**
-     * @var array
-     */
-    protected $enum = [];
 
     /**
-     * EnumConstants constructor.
-     */
-    public function __construct()
-    {
-        $objClass = new \ReflectionClass($this);
-        $arrConst = $objClass->getConstants();
-        foreach ($arrConst as $value) {
-            $this->correspond[static::getText($value)] = $value;
-            $this->enum[$value] = static::getText($value);
-        }
-    }
-
-    /**
-     * Get enumeration values from text
-     *
-     * @param $text
-     * @return mixed|null
-     */
-    public static function getTextValue($text)
-    {
-        $option = self::getStatic()->correspond;
-        return isset($option[$text]) ? $option[$text] : null;
-    }
-
-    /**
-     * Get content from enumeration values
-     * @param $value
-     * @return array
-     */
-    public static function getValueText($value)
-    {
-        return ['value' => $value, 'text' => self::getStatic()->enum[$value]];
-    }
-
-    /**
-     * Get all enumerated array
-     * @return array
+     * Get all enumeration types
+     * @return array|mixed
      */
     public static function getEnums()
     {
-        return self::getStatic()->enum;
+        $enums = [];
+        $class = get_called_class();
+        $message = ConstantsCollector::list();
+        foreach ($message as $classed => $object) {
+            if ($classed == $class) {
+                $enums = $object;
+                break;
+            }
+        }
+        return $enums;
+    }
+
+    /**
+     * Obtain all enumeration data according to static methods
+     * @param $method_name
+     * @param $arguments
+     * @return mixed|string
+     * @throws \Hyperf\Constants\Exception\ConstantsException
+     * @throws \ReflectionException
+     */
+    public static function __callStatic($method_name, $arguments)
+    {
+        $methods = strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . '_' . "$2", $method_name));
+        $methods = explode( '_',$methods);
+        if (count($methods) == 3) {
+            $objClass = new \ReflectionClass(get_called_class());
+            $arrConst = $objClass->getConstants();
+            [$mode, $filed, $type] = $methods;
+            $correspond = [];
+            if ($filed == "value") {
+                foreach ($arrConst as $value) {
+                    $method = $mode . ucfirst($type);
+                    $correspond[$value] = static::$method($value);
+                }
+            } elseif ($type == "value") {
+                foreach ($arrConst as $value) {
+                    $method = $mode . ucfirst($filed);
+                    $correspond[static::$method($value)] = $value;
+                }
+            }
+            return $correspond[$arguments[0]];
+        } else {
+            return parent::__callStatic($method_name, $arguments);
+        }
+
     }
 
     /**
