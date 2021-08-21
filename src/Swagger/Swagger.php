@@ -495,7 +495,7 @@ class Swagger
                 $arr = explode('.', $item->name);
                 array_walk($arr, function (&$v, $i) {
                     if ($i > 0) {
-                        $v = "[{$v}]";
+                        $v = $v == "*" ? "[0]" : "[{$v}]";
                     }
                 });
                 $dotName = implode('', $arr);

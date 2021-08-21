@@ -84,12 +84,11 @@ abstract class BaseController extends BaseObject implements ControllerInterface
      */
     public function success($data = [], string $message = '', int $code = 200): array
     {
-        $message = is_string($data) ? $data : $message;
         return [
             'status' => true,
-            'message' => $message,
+            'message' => is_string($data) ? $data : $message,
             'code' => $code,
-            'data' => $data,
+            'data' => is_string($data) ? [] : $data,
         ];
     }
 
@@ -110,7 +109,8 @@ abstract class BaseController extends BaseObject implements ControllerInterface
         ];
     }
 
-    public static function validationFail(string $message = '',int $code = 400){
+    public static function validationFail(string $message = '', int $code = 400)
+    {
         return [
             'status' => false,
             'message' => $message,
@@ -168,11 +168,12 @@ abstract class BaseController extends BaseObject implements ControllerInterface
      * @param array $data
      * @return array
      */
-    public static function getDefaultDataBySchemaName(string $schemaStr, array $data = []): array {
+    public static function getDefaultDataBySchemaName(string $schemaStr, array $data = []): array
+    {
         $res = array_merge([], $data);
         [$schemaName, $schemaMethod] = Swagger::extractSchemaNameMethod($schemaStr);
         if (method_exists(static::class, $schemaMethod)) {
-            $callback   = [static::class, $schemaMethod];
+            $callback = [static::class, $schemaMethod];
             $schemaData = call_user_func($callback);
             if (is_array($schemaData)) {
                 $res = array_merge($res, $schemaData);

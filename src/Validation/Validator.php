@@ -157,13 +157,33 @@ class Validator implements ValidationInterface
                 continue;
             }
             [$field, $filed_name] = explode('|', $fields);
-            //$field字段可能存在多级,如row.name
-            $fieldValue = ArrayHelper::getDotKey($allData, $field, null);
+            //未传的值是否跳过
+            $keys = explode('.', $field);
+            $is_continue = false;
+            if (count($keys) >= 3) {
+                $fieldValue = null;
+                [$key, $subscript, $field] = $keys;
+                if (isset($arr[$key]) && !empty($arr[$key])) {
+                    foreach ($arr[$key] as $value) {
+                        if(!isset($value[$field])){
+                            $is_continue = true;
+                        }else{
+                            $fieldValue[] = $value[$field];
+                        }
+                    }
+                    if($is_continue) continue;
+                }else{
+                    continue;
+                }
+            }else{
+                //$field字段可能存在多级,如row.name
+                $fieldValue = ArrayHelper::getDotKey($allData, $field, null);
+            }
 
             foreach ($customRuleArr as $customRule) {
                 //首先检查默认规则
                 $detailRules = explode('|', $customRule);
-                [$detailRules, $fieldValue] = self::checkDefault($allData, $detailRules, $field, $fieldValue);
+                [$detailRules, $fieldValue] = self::checkDefault($newData, $detailRules, $field, $fieldValue);
 
                 foreach ($detailRules as $detailRule) {
                     $ruleName = ApiAnnotation::parseRuleName($detailRule);
@@ -361,10 +381,17 @@ class Validator implements ValidationInterface
         [$enumName] = $options;
         $enumClass = ApplicationContext::getContainer()->get(ApiAnnotation::class)->getEnums();
         $enums = $enumClass[$enumName]::getEnums();
-        if (!isset($enums[$val])) {
-            $err = $this->translator->trans('validation.enum', ['attribute' => $name]);
+        $err = $this->translator->trans('validation.enum', ['attribute' => $name]);
+        if (is_array($val)) {
+            foreach ($val as $item) {
+                if (!isset($enums[$item])) {
+                    return [false, $err];
+                }
+            }
+        } else {
+            return [isset($enums[$val]) ? true : false, $err];
         }
-        return [isset($enums[$val]) ? true : false, $err];
+        return [true, $err];
     }
 
 

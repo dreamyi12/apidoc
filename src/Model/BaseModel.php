@@ -3,8 +3,10 @@
 namespace Dreamyi12\ApiDoc\Model;
 
 use Dreamyi12\ApiDoc\Condition\ConditionHandle;
+use Hyperf\Contract\Castable;
+use Hyperf\Contract\CastsAttributes;
+use Hyperf\Contract\CastsInboundAttributes;
 use Hyperf\DbConnection\Model\Model;
-use Hyperf\Utils\Context;
 use Hyperf\Utils\Str;
 
 class BaseModel extends Model
@@ -15,6 +17,22 @@ class BaseModel extends Model
     protected $castsClass = [];
 
     /**
+     * @var array
+     */
+    protected $savePermission = [];
+
+    /**
+     * @var array
+     */
+    protected $deletePermission = [];
+
+    /**
+     * @var array
+     */
+    protected $selectPermission = [];
+
+
+    /**
      * BaseModel constructor.
      *
      * @param array $attributes
@@ -23,7 +41,7 @@ class BaseModel extends Model
     {
         foreach ($this->casts as $cast => $value) {
             if (!isset($attributes[$cast]) || empty($attributes[$cast])) {
-                $attributes[$cast] = "value";
+                $attributes[$cast] = 0;
             }
         }
         parent::__construct($attributes);
@@ -110,5 +128,63 @@ class BaseModel extends Model
             return $arguments;
         }
         return $key;
+    }
+
+    /**
+     * Resolve the custom caster class for a given key.
+     *
+     * @param string $key
+     * @return CastsAttributes|CastsInboundAttributes
+     */
+    protected function resolveCasterClass($key)
+    {
+        $castType = $this->getCasts()[$key];
+
+        $arguments = [];
+
+        if (is_string($castType) && strpos($castType, ':') !== false) {
+            $segments = explode(':', $castType, 2);
+
+            $castType = $segments[0];
+            $arguments = explode(',', $segments[1]);
+        }
+
+        if (is_subclass_of($castType, Castable::class)) {
+            $castType = $castType::castUsing();
+        }
+
+        if (is_object($castType)) {
+            return $castType;
+        }
+
+        if (!class_exists($castType)) {
+            $castType = $this->castsClass[$castType];
+        }
+
+        return new $castType(...$arguments);
+    }
+
+    /**
+     * @return array
+     */
+    public function getDeletePermission()
+    {
+        return $this->deletePermission;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSavePermission()
+    {
+        return $this->savePermission;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSelectPermission()
+    {
+        return $this->selectPermission;
     }
 }

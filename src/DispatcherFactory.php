@@ -73,6 +73,11 @@ class DispatcherFactory extends BaseDispatcherFactory
      */
     public $swagger;
 
+    /**
+     * api接口地址数组
+     * @var
+     */
+    private $apis = [];
 
     /**
      * DispatcherFactory constructor.
@@ -100,6 +105,14 @@ class DispatcherFactory extends BaseDispatcherFactory
         }
     }
 
+    /**
+     * 获得api地址
+     * @return array
+     */
+    public function getApis()
+    {
+        return $this->apis;
+    }
 
     /**
      * 获取路由规则缓存
@@ -149,7 +162,7 @@ class DispatcherFactory extends BaseDispatcherFactory
             if (isset($metadata['_c'][ApiController::class])) {
                 //控制器中间件
                 $middlewares = $this->handleMiddleware($metadata['_c']);
-                $apis [] = ['middlewares' => $middlewares, 'class_name' => $className, 'metadata' => $metadata];
+                $this->apis [] = ['middlewares' => $middlewares, 'class_name' => $className, 'metadata' => $metadata];
             }
             if (isset($metadata['_c'][CastsClass::class])) {
 //                print_r($className);
@@ -157,7 +170,7 @@ class DispatcherFactory extends BaseDispatcherFactory
             }
 
         }
-        foreach ($apis as $api) {
+        foreach ($this->apis as $api) {
             $this->parseController($api['class_name']);
             $this->handleController($api['class_name'], $api['metadata']['_c'][ApiController::class], ($api['metadata']['_m'] ?? []), $api['middlewares']);
         }
@@ -354,6 +367,7 @@ class DispatcherFactory extends BaseDispatcherFactory
      */
     protected function handleController(string $className, Controller $controllerAnnos, array $methodMetadata, array $ctrlMiddlewares = []): void
     {
+        $this->thisrouters[] = $controllerAnnos;
         if (empty($methodMetadata)) {
             return;
         }
@@ -482,7 +496,6 @@ class DispatcherFactory extends BaseDispatcherFactory
                 }
             }
         }
-
         $apianno->setRouteCache($cache);
         $apianno->setEnums($this->enums);
         $this->tmp = [];

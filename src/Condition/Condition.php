@@ -11,7 +11,7 @@ class Condition
      * Conditional parameter object array
      * @var array
      */
-    private $whereParams;
+    private array $whereParams;
 
     /**
      * Condition constructor.
@@ -71,7 +71,7 @@ class Condition
      * Get condition parameters
      * @return array
      */
-    public function getWhereParams()
+    public function getWhereParams(): array
     {
         return $this->whereParams;
     }

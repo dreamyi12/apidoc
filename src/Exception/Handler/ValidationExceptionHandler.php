@@ -50,11 +50,11 @@ class ValidationExceptionHandler extends ExceptionHandler {
         $this->stopPropagation();
 
         if ($throwable instanceof HyperfValidationException) {
-            $res = $showDetailError ? $baseCtrlClass::doValidationFail($throwable->validator->errors()->first()) : $baseCtrlClass::doValidationFail();
+            $res = $showDetailError ? $baseCtrlClass::validationFail($throwable->validator->errors()->first()) : $baseCtrlClass::doValidationFail();
         } elseif ($throwable instanceof MyValidationException) {
-            $res = $showDetailError ? $baseCtrlClass::doValidationFail($throwable->getMessage()) : $baseCtrlClass::doValidationFail();
+            $res = $showDetailError ? $baseCtrlClass::validationFail($throwable->getMessage()) : $baseCtrlClass::doValidationFail();
         } else {
-            $res = $showDetailError ? $baseCtrlClass::doValidationFail(Consts::UNKNOWN) : $baseCtrlClass::doValidationFail();
+            $res = $showDetailError ? $baseCtrlClass::validationFail(Consts::UNKNOWN) : $baseCtrlClass::doValidationFail();
         }
 
         return $response->withBody(new SwooleStream(json_encode($res)));
