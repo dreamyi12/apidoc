@@ -50,6 +50,11 @@ class WhereParams
     private $key = "v1";
 
     /**
+     * @var string
+     */
+    private $function;
+
+    /**
      * @var
      */
     private $value;
@@ -181,6 +186,22 @@ class WhereParams
     public function setField($field): void
     {
         $this->field = $field;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getFunction()
+    {
+        return $this->function;
+    }
+
+    /**
+     * @param string $function
+     */
+    public function setFunction(string $function): void
+    {
+        $this->function = $function;
     }
 
 

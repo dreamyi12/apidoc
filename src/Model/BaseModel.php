@@ -32,20 +32,6 @@ class BaseModel extends Model
     protected $selectPermission = [];
 
 
-    /**
-     * BaseModel constructor.
-     *
-     * @param array $attributes
-     */
-    public function __construct(array $attributes = [])
-    {
-        foreach ($this->casts as $cast => $value) {
-            if (!isset($attributes[$cast]) || empty($attributes[$cast])) {
-                $attributes[$cast] = 0;
-            }
-        }
-        parent::__construct($attributes);
-    }
 
     /**
      * Additional model conditions

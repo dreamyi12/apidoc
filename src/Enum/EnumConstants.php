@@ -12,7 +12,7 @@ abstract class EnumConstants extends AbstractConstants
      * Get all enumeration types
      * @return array|mixed
      */
-    public static function getEnums()
+    public static function getEnums($value = null)
     {
         $enums = [];
         $class = get_called_class();
@@ -23,7 +23,7 @@ abstract class EnumConstants extends AbstractConstants
                 break;
             }
         }
-        return $enums;
+        return $value ? $enums[$value] : $enums;
     }
 
     /**
@@ -37,7 +37,7 @@ abstract class EnumConstants extends AbstractConstants
     public static function __callStatic($method_name, $arguments)
     {
         $methods = strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . '_' . "$2", $method_name));
-        $methods = explode( '_',$methods);
+        $methods = explode('_', $methods);
         if (count($methods) == 3) {
             $objClass = new \ReflectionClass(get_called_class());
             $arrConst = $objClass->getConstants();

@@ -151,6 +151,7 @@ class Validator implements ValidationInterface
         $newData = $validator->validate();
         isset($newData) && Context::set('validator.data', $newData);
         $data = self::combineData($data, $newData);
+
         //再执行自定义验证
         foreach ($customRules as $fields => $customRuleArr) {
             if (empty($customRuleArr)) {
@@ -159,6 +160,7 @@ class Validator implements ValidationInterface
             [$field, $filed_name] = explode('|', $fields);
             //未传的值是否跳过
             $keys = explode('.', $field);
+
             $is_continue = false;
             if (count($keys) >= 3) {
                 $fieldValue = null;
@@ -176,6 +178,8 @@ class Validator implements ValidationInterface
                     continue;
                 }
             }else{
+                if(!isset($allData[$field]))
+                    continue;
                 //$field字段可能存在多级,如row.name
                 $fieldValue = ArrayHelper::getDotKey($allData, $field, null);
             }

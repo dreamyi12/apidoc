@@ -37,10 +37,17 @@ class Condition
                 if (method_exists($whereParam, $method)) {
                     $whereParam->{$method}($value);
                 }
-
             }
-            if (!$whereParam->getValue() && isset($data[$field]))
-                $whereParam->setValue($data[$field]);
+            if (!$whereParam->getValue() && isset($data[$field])) {
+                $field_value = $data[$field];
+                if($whereParam->getSymbol()){
+                    $field_value = is_array($whereParam->getValue()) ? $whereParam->getValue() : explode($whereParam->getSymbol(), $whereParam->getValue());
+                }
+                if ($whereParam->getFunction()) {
+                    $field_value = call_user_func($whereParam->getFunction(), $field_value);
+                }
+                $whereParam->setValue($field_value);
+            }
 
             if (empty($whereParam->getValue())) {
                 continue;

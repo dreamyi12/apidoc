@@ -101,6 +101,11 @@ class Params extends AbstractAnnotation
     public $attribute;
 
     /**
+     * @var string 过滤函数
+     */
+    public $function;
+
+    /**
      * Params constructor.
      * @param mixed $value
      */
