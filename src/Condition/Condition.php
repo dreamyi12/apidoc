@@ -41,7 +41,7 @@ class Condition
             if (!$whereParam->getValue() && isset($data[$field])) {
                 $field_value = $data[$field];
                 if($whereParam->getSymbol()){
-                    $field_value = is_array($whereParam->getValue()) ? $whereParam->getValue() : explode($whereParam->getSymbol(), $whereParam->getValue());
+                    $field_value = is_array($field_value) ? $field_value : explode($whereParam->getSymbol(), $field_value);
                 }
                 if ($whereParam->getFunction()) {
                     $field_value = call_user_func($whereParam->getFunction(), $field_value);
