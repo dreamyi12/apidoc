@@ -36,7 +36,7 @@ class WhereParams
      * symbol
      * @var string
      */
-    private $symbol = ".";
+    private $symbol;
 
     /**
      *

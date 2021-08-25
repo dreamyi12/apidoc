@@ -97,7 +97,9 @@ class ConditionHandle extends ConditionAbstract
      */
     public function between(WhereParams $whereParams): Builder
     {
-        return $this->builder->whereBetween($whereParams->getField(), $whereParams->getValue(), $whereParams->getMode());
+        $value = $whereParams->getValue();
+        sort($value);
+        return $this->builder->whereBetween($whereParams->getField(), $value, $whereParams->getMode());
     }
 
     /**
@@ -106,7 +108,9 @@ class ConditionHandle extends ConditionAbstract
      */
     public function notBetween(WhereParams $whereParams): Builder
     {
-        return $this->builder->whereNotBetween($whereParams->getField(), $whereParams->getValue(), $whereParams->getMode());
+        $value = $whereParams->getValue();
+        sort($value);
+        return $this->builder->whereNotBetween($whereParams->getField(), $value, $whereParams->getMode());
     }
 
     /**
@@ -115,7 +119,9 @@ class ConditionHandle extends ConditionAbstract
      */
     public function in(WhereParams $whereParams): Builder
     {
-        return $this->builder->whereIn($whereParams->getField(), $whereParams->getValue(), $whereParams->getMode());
+        $value = $whereParams->getValue();
+        sort($value);
+        return $this->builder->whereIn($whereParams->getField(), $value, $whereParams->getMode());
     }
 
     /**
@@ -124,7 +130,9 @@ class ConditionHandle extends ConditionAbstract
      */
     public function notIn(WhereParams $whereParams): Builder
     {
-        return $this->builder->whereNotIn($whereParams->getField(), $whereParams->getValue(), $whereParams->getMode());
+        $value = $whereParams->getValue();
+        sort($value);
+        return $this->builder->whereNotIn($whereParams->getField(), $value, $whereParams->getMode());
     }
 
     /**

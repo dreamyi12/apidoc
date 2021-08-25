@@ -292,6 +292,7 @@ class DispatcherFactory extends BaseDispatcherFactory
             }
             $rules = [];
             $query_where = [];
+            $function = [];
             foreach ($annos as $anno) {
                 //解析请求参数规则
                 if ($anno instanceof Params) {
@@ -342,7 +343,12 @@ class DispatcherFactory extends BaseDispatcherFactory
                     if (!empty($anno->where)) {
                         $query_where[$fieldName] = $anno->where;
                     }
+
+                    if(!empty($anno->function)){
+                        $function[$fieldName] = $anno->function;
+                    }
                     $rules[$paramType] = [
+                        'function' => $function,
                         'where' => $query_where,
                         'hyperfs' => $hyperfs,
                         'customs' => $customs,

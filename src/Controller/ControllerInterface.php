@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Controller;
 
-interface ControllerInterface {
+interface ControllerInterface
+{
 
 
     /**
@@ -23,12 +24,12 @@ interface ControllerInterface {
 
     /**
      * 操作成功响应
-     * @param array $data
+     * @param $data
      * @param string $message
      * @param int $code
      * @return array
      */
-    public function success($data = [], string $message = '', int $code = 200): array;
+    public function success($data, string $message = '', int $code = 200);
 
 
     /**
@@ -37,8 +38,7 @@ interface ControllerInterface {
      * @param int $code
      * @return array
      */
-    public function error(string $message = '', int $code = 200): array;
-
+    public function error(string $message = '', int $code = 200, $data = []);
 
 
 }

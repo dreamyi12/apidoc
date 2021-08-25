@@ -2,6 +2,7 @@
 
 namespace Dreamyi12\ApiDoc\Model;
 
+use Dreamyi12\ApiDoc\Condition\Abstracts\ConditionAbstract;
 use Dreamyi12\ApiDoc\Condition\ConditionHandle;
 use Hyperf\Contract\Castable;
 use Hyperf\Contract\CastsAttributes;
@@ -32,7 +33,6 @@ class BaseModel extends Model
     protected $selectPermission = [];
 
 
-
     /**
      * Additional model conditions
      *
@@ -42,6 +42,7 @@ class BaseModel extends Model
     {
         return (new ConditionHandle(self::query()))->handle()->getBuilder();
     }
+
 
     /**
      * Set a given attribute on the model

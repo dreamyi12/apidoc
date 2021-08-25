@@ -29,8 +29,7 @@ class Condition
         $where = self::getValidatorWhere();
         $data = self::getValidatorData();
         foreach ($where as $field => $option) {
-            if (empty($option)) continue;
-
+            if (empty($option) || !isset($data[$field])) continue;
             $whereParam = new WhereParams();
             foreach ($option as $key => $value) {
                 $method = "set" . ucfirst($key);
@@ -40,11 +39,8 @@ class Condition
             }
             if (!$whereParam->getValue() && isset($data[$field])) {
                 $field_value = $data[$field];
-                if($whereParam->getSymbol()){
+                if ($whereParam->getSymbol()) {
                     $field_value = is_array($field_value) ? $field_value : explode($whereParam->getSymbol(), $field_value);
-                }
-                if ($whereParam->getFunction()) {
-                    $field_value = call_user_func($whereParam->getFunction(), $field_value);
                 }
                 $whereParam->setValue($field_value);
             }

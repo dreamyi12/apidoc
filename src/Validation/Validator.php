@@ -135,6 +135,7 @@ class Validator implements ValidationInterface
      */
     public function validate(array $rules, array $data, array $otherData = [], object $controller = null): array
     {
+        $htperfFunction = $rules['function'] ?? [];
         $hyperfRules = $rules['hyperfs'] ?? []; //hyperf本身的验证器规则
         $customRules = $rules['customs'] ?? []; //本组件的扩展验证规则
         $allData = array_merge($otherData, $data);
@@ -149,7 +150,17 @@ class Validator implements ValidationInterface
         }
         $validator = $this->validator->make($allData, $hyperf_rule, [], $field_map);
         $newData = $validator->validate();
-        isset($newData) && Context::set('validator.data', $newData);
+        if(isset($newData) && !empty($newData)){
+            $validator_data = $newData;
+            if(!empty($htperfFunction)){
+                foreach ($htperfFunction as $function_field => $function){
+                    if(empty($validator_data[$function_field])) continue;
+                    if(!function_exists($function)) continue;
+                    $validator_data[$function_field] = $function($validator_data[$function_field]);
+                }
+            }
+            Context::set('validator.data', $validator_data);
+        }
         $data = self::combineData($data, $newData);
 
         //再执行自定义验证

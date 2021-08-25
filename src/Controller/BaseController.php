@@ -15,6 +15,7 @@ use Dreamyi12\ApiDoc\Swagger\Swagger;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
+use Hyperf\Resource\Json\ResourceCollection;
 use Hyperf\Utils\Context;
 use Kph\Helpers\StringHelper;
 use Kph\Helpers\ValidateHelper;
@@ -58,7 +59,6 @@ abstract class BaseController extends BaseObject implements ControllerInterface
      * @var array 接口响应的基本json结构
      */
     protected static $baseSchema = [
-        'status' => true,
         'message' => 'success',
         'code' => 200,
         'data' => [],
@@ -77,15 +77,17 @@ abstract class BaseController extends BaseObject implements ControllerInterface
 
     /**
      * 处理接口成功数据
-     * @param array $data
+     * @param $data
      * @param string $msg
      * @param int $code
      * @return array
      */
-    public function success($data = [], string $message = '', int $code = 200): array
+    public function success($data, string $message = '', int $code = 200)
     {
+        if ($data instanceof ResourceCollection) {
+            return $data->additional(['code' => $code, 'message' => $message])->toResponse();
+        }
         return [
-            'status' => true,
             'message' => is_string($data) ? $data : $message,
             'code' => $code,
             'data' => is_string($data) ? [] : $data,
@@ -99,20 +101,18 @@ abstract class BaseController extends BaseObject implements ControllerInterface
      * @param int $code
      * @return array
      */
-    public function error(string $message = '', int $code = 200): array
+    public function error(string $message = '', int $code = 200, $data = [])
     {
         return [
-            'status' => false,
             'message' => $message,
             'code' => $code,
-            'data' => [],
+            'data' => $data,
         ];
     }
 
     public static function validationFail(string $message = '', int $code = 400)
     {
         return [
-            'status' => false,
             'message' => $message,
             'code' => $code,
             'data' => [],
