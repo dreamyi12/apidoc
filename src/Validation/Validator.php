@@ -15,6 +15,7 @@ use Dreamyi12\ApiDoc\ApiAnnotation;
 use Dreamyi12\ApiDoc\Exception\ValidationException;
 use Hyperf\Contract\TranslatorInterface;
 use Hyperf\Di\Annotation\Inject;
+use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\Server\Exception\RuntimeException;
 use Hyperf\Translation\TranslatorFactory;
 use Hyperf\Utils\ApplicationContext;
@@ -26,6 +27,7 @@ use Hyperf\Validation\ValidatorFactory;
 use Kph\Helpers\ArrayHelper;
 use Kph\Helpers\StringHelper;
 use Kph\Helpers\ValidateHelper;
+use League\Flysystem\Filesystem;
 
 
 /**
@@ -55,6 +57,18 @@ class Validator implements ValidationInterface
      * @var TranslatorInterface
      */
     private $translator;
+
+    /**
+     * @Inject
+     * @var RequestInterface
+     */
+    protected $requestInterface;
+
+    /**
+     * @Inject
+     * @var Filesystem
+     */
+    protected $filesystem;
 
 
     /**
@@ -136,9 +150,11 @@ class Validator implements ValidationInterface
     public function validate(array $rules, array $data, array $otherData = [], object $controller = null): array
     {
         $htperfFunction = $rules['function'] ?? [];
+        $htperfPath = $rules['path'] ?? [];
         $hyperfRules = $rules['hyperfs'] ?? []; //hyperf本身的验证器规则
         $customRules = $rules['customs'] ?? []; //本组件的扩展验证规则
         $allData = array_merge($otherData, $data);
+
         $errors = [];
         $field_map = [];
         $hyperf_rule = [];
@@ -148,14 +164,34 @@ class Validator implements ValidationInterface
             $field_map[$field] = $map;
             $hyperf_rule[$field] = $rules;
         }
+        //设置图片验证规则
+        foreach ($htperfPath as $field => $path) {
+            $allData[$field] = $this->requestInterface->file($field);
+        }
         $validator = $this->validator->make($allData, $hyperf_rule, [], $field_map);
         $newData = $validator->validate();
-        if(isset($newData) && !empty($newData)){
+
+        //判断文件是否存在，存在则上传
+        if (!empty($htperfPath)) {
+            foreach ($htperfPath as $field => $path) {
+                $files = $this->requestInterface->file($field);
+                if (!empty($files)) {
+                    $stream = fopen($files->getRealPath(), 'r+');
+                    $path = $path . md5($files->getClientFilename()."QcJun".time()) . "." . $files->getExtension();
+                    if (!$this->filesystem->has($path)) {
+                        $this->filesystem->writeStream($path, $stream);
+                    }
+                    $newData[$field] = $path;
+                }
+            }
+        }
+        //使用自定义函数处理
+        if (isset($newData) && !empty($newData)) {
             $validator_data = $newData;
-            if(!empty($htperfFunction)){
-                foreach ($htperfFunction as $function_field => $function){
-                    if(empty($validator_data[$function_field])) continue;
-                    if(!function_exists($function)) continue;
+            if (!empty($htperfFunction)) {
+                foreach ($htperfFunction as $function_field => $function) {
+                    if (empty($validator_data[$function_field])) continue;
+                    if (!function_exists($function)) continue;
                     $validator_data[$function_field] = $function($validator_data[$function_field]);
                 }
             }
@@ -178,18 +214,18 @@ class Validator implements ValidationInterface
                 [$key, $subscript, $field] = $keys;
                 if (isset($arr[$key]) && !empty($arr[$key])) {
                     foreach ($arr[$key] as $value) {
-                        if(!isset($value[$field])){
+                        if (!isset($value[$field])) {
                             $is_continue = true;
-                        }else{
+                        } else {
                             $fieldValue[] = $value[$field];
                         }
                     }
-                    if($is_continue) continue;
-                }else{
+                    if ($is_continue) continue;
+                } else {
                     continue;
                 }
-            }else{
-                if(!isset($allData[$field]))
+            } else {
+                if (!isset($allData[$field]))
                     continue;
                 //$field字段可能存在多级,如row.name
                 $fieldValue = ArrayHelper::getDotKey($allData, $field, null);

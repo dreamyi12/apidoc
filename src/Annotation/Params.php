@@ -106,6 +106,11 @@ class Params extends AbstractAnnotation
     public $function;
 
     /**
+     * @var string 上传地址
+     */
+    public $path;
+
+    /**
      * Params constructor.
      * @param mixed $value
      */
