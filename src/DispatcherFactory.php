@@ -313,7 +313,7 @@ class DispatcherFactory extends BaseDispatcherFactory
                         //是否本组件的转换器
                         $convMethod = 'conver_' . $ruleName;
                         if (method_exists(Validator::class, $convMethod)) {
-                            $customs[$fieldName][] = $detail;
+                            $customs[$anno->key][] = $detail;
                         }
 
                         //是否本组件的验证规则
@@ -328,7 +328,7 @@ class DispatcherFactory extends BaseDispatcherFactory
                             //检查该方法
                             $this->checkValidateCallbackAction($className, $controllerMethod);
 
-                            $customs[$fieldName][] = $detail;
+                            $customs[$anno->key][] = $detail;
                             continue;
                         }
                         // 是否hyperf验证规则

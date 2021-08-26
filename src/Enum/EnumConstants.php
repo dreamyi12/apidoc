@@ -27,6 +27,22 @@ abstract class EnumConstants extends AbstractConstants
     }
 
     /**
+     * 获取所有枚举值
+     * @return array
+     * @throws \ReflectionException
+     */
+    public static function getValues()
+    {
+        $objClass = new \ReflectionClass(get_called_class());
+        $arrConst = $objClass->getConstants();
+        $values = [];
+        foreach ($arrConst as $value) {
+            $values[] = $value;
+        }
+        return $values;
+    }
+
+    /**
      * Obtain all enumeration data according to static methods
      * @param $method_name
      * @param $arguments
