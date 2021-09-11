@@ -175,14 +175,14 @@ class DispatcherFactory extends BaseDispatcherFactory
                 $customs = $rules[$paramType]['customs'] ?? [];
                 $frames = $rules[$paramType]['frames'] ?? [];
                 [$customs[$annotation->key], $frames[$annotation->key]] = $this->getRuleProcess($annotation);
-                if (!empty($anno->where)) {
-                    $query_where[$fieldName] = $anno->where;
+                if (!empty($annotation->where)) {
+                    $query_where[$fieldName] = $annotation->where;
                 }
-                if (!empty($anno->function)) {
-                    $function[$fieldName] = $anno->function;
+                if (!empty($annotation->function)) {
+                    $function[$fieldName] = $annotation->function;
                 }
-                if (!empty($anno->path)) {
-                    $path[$fieldName] = $anno->path;
+                if (!empty($annotation->path)) {
+                    $path[$fieldName] = $annotation->path;
                 }
                 $rules[$paramType] = [
                     'path' => isset($path) ? $path : [],

@@ -67,7 +67,7 @@ class Condition
      */
     public static function getValidatorWhere(): array
     {
-        return !empty(Context::get('validator.where')) ? Context::get('validator.where') : [];
+        return !empty(Context::get('validator.where')) ? get_object_vars(Context::get('validator.where')) : [];
     }
 
     /**
