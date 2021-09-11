@@ -13,11 +13,10 @@ namespace Dreamyi12\ApiDoc;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Dreamyi12\ApiDoc\Annotation\ApiController;
-use Dreamyi12\ApiDoc\Annotation\ApiVersion;
-use Dreamyi12\ApiDoc\Annotation\Casts\CastsClass;
 use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
 use Dreamyi12\ApiDoc\Annotation\Methods;
 use Dreamyi12\ApiDoc\Annotation\Params;
+use Dreamyi12\ApiDoc\Annotation\Validator\CustomValidator;
 use Dreamyi12\ApiDoc\Controller\ControllerInterface;
 use Dreamyi12\ApiDoc\Swagger\Swagger;
 use Dreamyi12\ApiDoc\Validation\Validator;
@@ -27,18 +26,12 @@ use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Router\DispatcherFactory as BaseDispatcherFactory;
 use Hyperf\Server\Exception\RuntimeException as ServerRuntimeException;
 use Hyperf\Utils\ApplicationContext;
+use Hyperf\Utils\Arr;
+use Hyperf\Utils\Str;
 use Hyperf\Validation\Concerns\ValidatesAttributes;
-use Kph\Consts;
-use Kph\Helpers\ArrayHelper;
-use Kph\Helpers\StringHelper;
-use Kph\Objects\BaseObject;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
-use ReflectionParameter;
-use Throwable;
 
 
 /**
@@ -47,37 +40,31 @@ use Throwable;
  */
 class DispatcherFactory extends BaseDispatcherFactory
 {
-
-
     /**
-     * 临时数据
-     * @var array
-     */
-    private $tmp = [];
-
-
-    /**
+     *
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
-     * 枚举对象
-     * @var
-     */
-    private $enums;
-
-    /**
-     * API文档swagger对象
      * @var Swagger
      */
-    public $swagger;
+    public Swagger $swagger;
 
     /**
-     * api接口地址数组
-     * @var
+     * @var array
      */
-    private $apis = [];
+    protected array $tmps;
+
+    /**
+     * @var array
+     */
+    protected array $customValidator = [];
+
+    /**
+     * @var array
+     */
+    protected array $enumClass = [];
 
     /**
      * DispatcherFactory constructor.
@@ -85,434 +72,268 @@ class DispatcherFactory extends BaseDispatcherFactory
     public function __construct()
     {
         $this->initConfig();
-        $this->swagger = make(Swagger::class);
-
+        $this->initSwagger();
         parent::__construct();
-
-        $this->addToRouteCache();
+        $this->addRouteCache();
     }
 
-
     /**
-     * 初始化配置
+     *Initialize basic configuration
      */
-    private function initConfig()
+    private function initConfig(): void
     {
-        if (is_null($this->config)) {
-            $path = BASE_PATH . '/config/autoload/apihelper.php';
-            $conf = file_exists($path) ? include $path : [];
-            $this->config = new Config($conf);
-        }
+        $path = BASE_PATH . '/config/autoload/apihelper.php';
+        $conf = file_exists($path) ? include $path : [];
+        $this->config = new Config($conf);
     }
 
     /**
-     * 获得api地址
-     * @return array
+     * Initialize Swagger object
      */
-    public function getApis()
+    public function initSwagger(): void
     {
-        return $this->apis;
+        $this->swagger = make(Swagger::class);
     }
 
     /**
-     * 获取路由规则缓存
-     * @return object
-     */
-    public function getRouteCache()
-    {
-        return $this->routeCache;
-    }
-
-    /**
-     * 获取枚举类
-     * @return mixed
-     */
-    public function getEnums()
-    {
-        return $this->enums;
-    }
-
-    /**
-     * 初始化注解路由
      * @param array $collector
-     * @throws ReflectionException
+     * @throws ConflictAnnotationException
      */
     protected function initAnnotationRoute(array $collector): void
     {
-
-        //调用父类注解路由
+        $middlewareData = [];
+        $this->checkBaseController('');
         parent::initAnnotationRoute($collector);
 
-        //检查基本控制器配置
+        foreach ($collector as $className => $metadata) {
+            if (isset($metadata['_c'][EnumClass::class])) {
+                $class = $metadata['_c'][EnumClass::class];
+                $this->enumClass[$class->name] = $className;
+            }
+            if (isset($metadata['_c'][CustomValidator::class])) {
+                $class = $metadata['_c'][CustomValidator::class];
+                $this->customValidator[$class->name] = $className;
+            }
+            if (isset($metadata['_c'][ApiController::class])) {
+                $middlewares = $this->handleMiddleware($metadata['_c']);
+                $middlewareData[] = ['middlewares' => $middlewares, 'class_name' => $className, 'metadata' => $metadata];
+            }
+        }
+        foreach ($middlewareData as $middleware) {
+            $this->parseController($middleware['class_name']);
+            $this->handleController($middleware['class_name'], $middleware['metadata']['_c'][ApiController::class], ($middleware['metadata']['_m'] ?? []), $middleware['middlewares']);
+        }
+        $this->swagger->saveJson();
+    }
+
+    /**
+     * Verify basic controller
+     * @param string|null $className
+     */
+    private function checkBaseController(string $className = null)
+    {
         $baseCtrlClass = $this->config->get('api.base_controller');
+        if ($className) {
+            $ctrlObj = new $className();
+            if (!($ctrlObj instanceof $baseCtrlClass)) {
+                throw new ServerRuntimeException("{$className} must extends from {$baseCtrlClass}.");
+            } elseif (!($ctrlObj instanceof ControllerInterface)) {
+                throw new ServerRuntimeException("{$baseCtrlClass} must implements " . ControllerInterface::class);
+            }
+        }
         if (empty($baseCtrlClass)) {
             throw new ServerRuntimeException("api.base_controller can not be empty.");
         } elseif (!class_exists($baseCtrlClass)) {
             throw new ServerRuntimeException("class: {$baseCtrlClass} does not exist.");
         }
-        $routes = [];
-        $apis = [];
-        foreach ($collector as $className => $metadata) {
-            //优先处理枚举类
-            if (isset($metadata['_c'][EnumClass::class])) {
-                $class = $metadata['_c'][EnumClass::class];
-                $this->enums[$class->name] = $className;
-            }
-            //是否API控制器
-            if (isset($metadata['_c'][ApiController::class])) {
-                //控制器中间件
-                $middlewares = $this->handleMiddleware($metadata['_c']);
-                $this->apis [] = ['middlewares' => $middlewares, 'class_name' => $className, 'metadata' => $metadata];
-            }
-            if (isset($metadata['_c'][CastsClass::class])) {
-//                print_r($className);
-//                print_r($metadata['_c'][CastsClass::class]);
-            }
-
-        }
-        foreach ($this->apis as $api) {
-            $this->parseController($api['class_name']);
-            $this->handleController($api['class_name'], $api['metadata']['_c'][ApiController::class], ($api['metadata']['_m'] ?? []), $api['middlewares']);
-        }
-
-
-        $this->swagger->saveJson();
     }
 
-
     /**
-     * 分析控制器
+     * Analyze the corresponding controller
      * @param string $className
-     * @throws AnnotationException
-     * @throws ReflectionException
      */
     private function parseController(string $className): void
     {
-        // 检查是否继承自基本控制器,以及控制器接口
-        $ctrlObj = new $className();
-        $baseCtrlClass = $this->config->get('api.base_controller');
-        if (!($ctrlObj instanceof $baseCtrlClass)) {
-            throw new ServerRuntimeException("{$className} must extends from {$baseCtrlClass}.");
-        } elseif (!($ctrlObj instanceof ControllerInterface)) {
-            throw new ServerRuntimeException("{$baseCtrlClass} must implements " . ControllerInterface::class);
-        }
-
-        // 检查控制器前置方法
-        $beforeAction = $this->config->get('api.controller_antecedent');
-        if (!empty($beforeAction) && method_exists($className, $beforeAction)) {
-            $fn = new ReflectionMethod($className, $beforeAction);
-
-            if (!$fn->isPublic()) {
-                throw new ServerRuntimeException("{$className}::{$beforeAction} must be public method.");
-            }
-
-            //检查该方法的参数是否符合要求
-            $paramNum = $fn->getNumberOfParameters();
-            if ($paramNum != 1) {
-                throw new ServerRuntimeException("{$className}::{$beforeAction} must has only one parameter.");
-            }
-
-            //参数类型是否符合
-            foreach ($fn->getParameters() as $arg) {
-                if ($arg->getType()->getName() != ServerRequestInterface::class) {
-                    throw new ServerRuntimeException("{$className}::{$beforeAction} the parameter type must be " . ServerRequestInterface::class);
-                }
-            }
-
-            //是否有返回值
-            if (!$fn->hasReturnType() || $fn->getReturnType()->getName() != ServerRequestInterface::class) {
-                throw new ServerRuntimeException("{$className}::{$beforeAction} the return type must be " . ServerRequestInterface::class);
-            }
-        }
-
-        // 检查控制器拦截方法
-        $interceptAction = $this->config->get('api.controller_intercept');
-        if (!empty($interceptAction) && method_exists($className, $interceptAction)) {
-            $fn = new ReflectionMethod($className, $interceptAction);
-
-            if (!$fn->isPublic()) {
-                throw new ServerRuntimeException("{$className}::{$interceptAction} must be public method.");
-            }
-
-            //检查该方法的参数是否符合要求
-            $paramNum = $fn->getNumberOfParameters();
-            if ($paramNum != 3) {
-                throw new ServerRuntimeException("{$className}::{$interceptAction} must has three parameter.");
-            }
-
-            //参数类型是否符合
-            foreach ($fn->getParameters() as $arg) {
-                if ($arg->getType()->getName() != 'string') {
-                    throw new ServerRuntimeException("{$className}::{$interceptAction} the parameter type must be string");
-                }
-            }
-        }
-
-        // 检查控制器后置方法
-        $afterAction = $this->config->get('api.controller_subsequent');
-        if (!empty($afterAction) && method_exists($className, $afterAction)) {
-            $fn = new ReflectionMethod($className, $afterAction);
-
-            if (!$fn->isPublic()) {
-                throw new ServerRuntimeException("{$className}::{$afterAction} must be public method.");
-            }
-
-            //检查该方法的参数是否符合要求
-            $paramNum = $fn->getNumberOfParameters();
-            if ($paramNum != 2) {
-                throw new ServerRuntimeException("{$className}::{$interceptAction} must has two parameter.");
-            }
-
-            /** @var ReflectionParameter $firstArg */
-            $firstArg = $fn->getParameters()[0];
-            if ($firstArg->getClass()->getName() != ServerRequestInterface::class) {
-                throw new ServerRuntimeException("{$className}::{$afterAction} the first parameter type must be " . ServerRequestInterface::class);
-            }
-
-            /** @var ReflectionParameter $secondArg */
-            $secondArg = $fn->getParameters()[1];
-            if ($secondArg->getClass()->getName() != ResponseInterface::class) {
-                throw new ServerRuntimeException("{$className}::{$afterAction} the second parameter type must be " . ResponseInterface::class);
-            }
-
-            //是否有返回值
-            if ($fn->returnsReference() !== false || ($fn->hasReturnType() && $fn->getReturnType()->getName() != 'void')) {
-                throw new ServerRuntimeException("{$className}::{$afterAction} must have no return value.");
-            }
-        }
-
+        $this->checkBaseController($className);
+        
         $refObj = new ReflectionClass($className);
         $methods = $refObj->getMethods(ReflectionMethod::IS_PUBLIC);
-
         foreach ($methods as $methodObj) {
-            $action = $methodObj->getName();
-            $annos = ApiAnnotation::getMethodMetadata($className, $action);
-            if ($methodObj->isStatic() || empty($annos)) {
-                continue;
-            }
             $rules = [];
-            $query_where = [];
-            $function = [];
-            $path = [];
-            foreach ($annos as $anno) {
-                //解析请求参数规则
-                if ($anno instanceof Params) {
-                    $paramType = BaseObject::getShortName($anno);
-                    $fieldName = ApiAnnotation::getFieldByKey($anno->key);
-                    $details = ApiAnnotation::parseDetailsByRule($anno->rule);
-                    $details = Validator::sortDetailRules($details);
-                    if (!isset($rules[$paramType])) {
-                        $rules[$paramType] = [];
-                    }
-                    $customs = $rules[$paramType]['customs'] ?? [];
-                    $hyperfs = $rules[$paramType]['hyperfs'] ?? [];
-
-                    foreach ($details as $detail) {
-                        $ruleName = ApiAnnotation::parseRuleName($detail);
-
-                        //是否本组件的转换器
-                        $convMethod = 'conver_' . $ruleName;
-                        if (method_exists(Validator::class, $convMethod)) {
-                            $customs[$anno->key][] = $detail;
-                        }
-
-                        //是否本组件的验证规则
-                        $ruleMethod = 'rule_' . $ruleName;
-                        if (method_exists(Validator::class, $ruleMethod)) {
-                            $customs[$anno->key][] = $detail;
-                        }
-
-                        // cb_xxx,调用控制器的方法xxx
-                        $controllerMethod = str_replace(Validator::$validateCallbackPrefix, '', $ruleName);
-                        if (strpos($ruleName, Validator::$validateCallbackPrefix) !== false && method_exists($className, $controllerMethod)) {
-                            //检查该方法
-                            $this->checkValidateCallbackAction($className, $controllerMethod);
-
-                            $customs[$anno->key][] = $detail;
-                            continue;
-                        }
-                        // 是否hyperf验证规则
-                        $hyperfMethod = 'validate' . StringHelper::toCamelCase($ruleName);
-                        if (method_exists(ValidatesAttributes::class, $hyperfMethod)) {
-                            $hyperfs[$anno->key][] = $detail;
-                        } elseif (!in_array($detail, ArrayHelper::multiArrayValues($customs))) { //非hyperf规则,且非本组件规则
-                            throw new ServerRuntimeException("The rule not defined: {$detail} [{$className}::{$action}->$fieldName]");
-                        }
-                    }
-                    ArrayHelper::regularSort($hyperfs, true);
-                    ArrayHelper::regularSort($customs, true);
-                    if (!empty($anno->where)) {
-                        $query_where[$fieldName] = $anno->where;
-                    }
-                    if (!empty($anno->function)) {
-                        $function[$fieldName] = $anno->function;
-                    }
-                    if (!empty($anno->path)) {
-                        $path[$fieldName] = $anno->path;
-                    }
-
-                    $rules[$paramType] = [
-                        'path' => $path,
-                        'function' => $function,
-                        'where' => $query_where,
-                        'hyperfs' => $hyperfs,
-                        'customs' => $customs,
-                    ];
+            $action = $methodObj->getName();
+            $methodMetadata = ApiAnnotation::getMethodMetadata($className, $action);
+            if ($methodObj->isStatic() || empty($methodMetadata)) continue;
+            //Process parameter route validation
+            //rules and initialize the corresponding rules
+            foreach ($methodMetadata as $annotation) {
+                if (!$annotation instanceof Params) continue;
+                $paramType = class_basename($annotation);
+                $fieldName = $this->getFieldByKey($annotation->key);
+                if (!isset($rules[$paramType])) {
+                    $rules[$paramType] = [];
                 }
+                $customs = $rules[$paramType]['customs'] ?? [];
+                $frames = $rules[$paramType]['frames'] ?? [];
+                [$customs[$annotation->key], $frames[$annotation->key]] = $this->getRuleProcess($annotation);
+                if (!empty($anno->where)) {
+                    $query_where[$fieldName] = $anno->where;
+                }
+                if (!empty($anno->function)) {
+                    $function[$fieldName] = $anno->function;
+                }
+                if (!empty($anno->path)) {
+                    $path[$fieldName] = $anno->path;
+                }
+                $rules[$paramType] = [
+                    'path' => isset($path) ? $path : [],
+                    'function' => isset($function) ? $function : [],
+                    'where' => isset($query_where) ? $query_where : [],
+                    'frames' => $frames,
+                    'customs' => $customs,
+                ];
             }
-            $ctrlKey = $className . Consts::PAAMAYIM_NEKUDOTAYIM . $action;
-            $this->tmp[$ctrlKey] = $rules;
+            $ctrlKey = $className . "::" . $action;
+            $this->tmps[$ctrlKey] = $rules;
         }
+    }
 
+    /**
+     * Get rule process processing
+     * @param $annotation
+     * @return array
+     */
+    protected function getRuleProcess($annotation)
+    {
+        $rules = $this->sortDetailRules(ApiAnnotation::parseByRule($annotation->rule));
+        $customs = $frames = [];
+        foreach ($rules as $rule) {
+            $ruleName = ApiAnnotation::parseRuleName($rule);
+            //Customize validation rules
+            if (Arr::has($this->customValidator, $ruleName)) {
+                $customs[] = $rule;
+            }
+            $frameMethod = Str::camel('validate_' . $ruleName);
+            // Framework validation rules
+            if (method_exists(ValidatesAttributes::class, $frameMethod)) {
+                $frames[] = $rule;
+            } else if (!array_key_exists($ruleName, $this->customValidator)) {
+                throw new ServerRuntimeException("The rule not defined: {$ruleName}");
+            }
+        }
+        return [Arr::sortRecursive($customs), Arr::sortRecursive($frames)];
     }
 
 
-    /**
-     * 处理匹配的控制器
-     * @param string $className 控制器类名
-     * @param Controller $controllerAnnos 控制器注解
-     * @param array $methodMetadata 方法注解
-     * @param array $ctrlMiddlewares 控制器中间件
-     * @throws ConflictAnnotationException
-     * @throws ReflectionException
-     */
-    protected function handleController(string $className, Controller $controllerAnnos, array $methodMetadata, array $ctrlMiddlewares = []): void
+    public function sortDetailRules(array $rules): array
     {
-        $this->thisrouters[] = $controllerAnnos;
-        if (empty($methodMetadata)) {
-            return;
+        $priorities = ['default', 'required', 'int', 'integer', 'bool', 'boolean', 'number', 'numeric', 'float', 'string', 'array', 'object'];
+        $res = [];
+        foreach ($rules as $rule) {
+            $lowRule = strtolower($rule);
+            if (in_array($lowRule, $priorities)) {
+                if ($lowRule == 'int') {
+                    $rule = 'integer';
+                } elseif ($lowRule == 'bool') {
+                    $rule = 'boolean';
+                } elseif ($lowRule == 'number') {
+                    $rule = 'numeric';
+                }
+                array_unshift($res, $rule);
+            } else {
+                array_push($res, $rule);
+            }
         }
+        return $res;
+    }
 
-        $router = $this->getRouter($controllerAnnos->server);
-        $prefix = rtrim($controllerAnnos->prefix, '/');
+    /**
+     * 从注解key中获取字段名
+     * @param string $key
+     * @return string
+     */
+    public static function getFieldByKey(string $key): string
+    {
+        $arr = explode('|', $key);
+        $res = $arr[0] ?? '';
+        return $res;
+    }
+
+    /**
+     *
+     * @param string $className
+     * @param Controller $ControllerAnnotation
+     * @param array $methodMetadata
+     * @param array $middlewares
+     * @throws AnnotationException
+     * @throws ConflictAnnotationException
+     */
+    protected function handleController(string $className, Controller $ControllerAnnotation, array $methodMetadata, array $middlewares = []): void
+    {
+        if (empty($methodMetadata)) return;
+
+        $router = $this->getRouter($ControllerAnnotation->server);
+        $prefix = rtrim($ControllerAnnotation->prefix, '/');
         $basePath = $this->getPrefix($className, $prefix);
         $versions = ApiAnnotation::getVersionMetadata($className);
         $useVerPath = (bool)$this->config->get('api.use_version_path', true);
-
-        $routeAddeds = [];
-        $addPathToRouter = function ($httpMethod, string $route, $handler, array $options = []) use ($router, $routeAddeds) {
-            $arr = [$httpMethod, $route, $handler];
-            $key = json_encode($arr);
-
-            if (!in_array($key, $routeAddeds)) {
-                array_push($routeAddeds, $key);
-                try {
-                    $router->addRoute($httpMethod, $route, $handler, $options);
-                } catch (Throwable $e) {
+        $addPathToRouter = $this->structureRoute($router);
+        foreach ($methodMetadata as $action => $annotations) {
+            if (empty($annotations)) continue;
+            $middlewares = array_unique(array_merge($middlewares, $this->handleMiddleware($annotations)));
+            foreach ($annotations as $annotation) {
+                if (!$annotation instanceof Methods) continue;
+                $path = $basePath . '/' . $action;
+                if (!empty($annotation->path)) {
+                    $annotationPath = $annotation->path[0] === "/" ? $annotation->path : "/" . $annotation->path;
+                    $isRouteParam = preg_match('/^{.*}$/', $annotationPath);
+                    $path = $isRouteParam ? $basePath . '/' . $annotationPath : $prefix . $annotationPath;
                 }
+                //Add version number to routing path
+                if (!empty($versions)) {
+                    foreach ($versions as $version) {
+                        $versionPath = $useVerPath ? ('/' . $version->group . $path) : $path;
+                        $this->swagger->addPath($className, $action, $versionPath, $version);
+                        $addPathToRouter($annotation->methods, $versionPath, [$className, $action], ['middleware' => $middlewares,]);
+                    }
+                } else {
+                    $this->swagger->addPath($className, $action, $path);
+                    $addPathToRouter($annotation->methods, $path, [$className, $action], ['middleware' => $middlewares,]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Constructing routing rules
+     * @param $router
+     * @param array $routeAddress
+     * @return \Closure
+     */
+    protected function structureRoute($router, $routeAddress = [])
+    {
+        return function ($httpMethod, string $route, $handler, array $options = [])
+        use ($router, $routeAddress) {
+            $routeKey = json_encode([$httpMethod, $route, $handler]);
+            if (!in_array($routeKey, $routeAddress)) {
+                array_push($routeAddress, $routeKey);
+                $router->addRoute($httpMethod, $route, $handler, $options);
             }
         };
-
-        foreach ($methodMetadata as $action => $annos) {
-            if (empty($annos)) {
-                continue;
-            }
-
-            //方法中间件
-            $middlewares = array_merge($ctrlMiddlewares, $this->handleMiddleware($annos));
-            $middlewares = array_unique($middlewares);
-
-            foreach ($annos as $anno) {
-                //添加路由
-                if ($anno instanceof Methods) {
-                    $path = $basePath . '/' . $action;
-
-                    if (!empty($anno->path)) {
-                        $annoPath = $anno->path;
-                        if ($annoPath[0] !== '/') {
-                            $annoPath = '/' . $annoPath;
-                        }
-
-                        //仅仅是路由参数,如 {id}
-                        $isRouteParam = preg_match('/^{.*}$/', $annoPath);
-                        if ($isRouteParam) {
-                            $path = $basePath . '/' . $annoPath;
-                        } else {
-                            $path = $prefix . $annoPath;
-                        }
-                    }
-
-                    //路由路径添加版本号
-                    if (!empty($versions)) {
-                        /** @var ApiVersion $version */
-                        foreach ($versions as $version) {
-                            $vpath = $useVerPath ? ('/' . $version->group . $path) : $path;
-                            $this->swagger->addPath($className, $action, $vpath, $this->enums, $version);
-                            $addPathToRouter($anno->methods, $vpath, [$className, $action], ['middleware' => $middlewares,]);
-                        }
-                    } else {
-                        $this->swagger->addPath($className, $action, $path, $this->enums);
-                        $addPathToRouter($anno->methods, $path, [$className, $action], ['middleware' => $middlewares,]);
-                    }
-                }
-            }
-        }
     }
 
-
     /**
-     * 检查控制器的验证回调方法
-     * @param string $className 控制器类名
-     * @param string $action 方法名
-     * @throws ReflectionException
+     * Add route cache
      */
-    protected function checkValidateCallbackAction(string $className, string $action): void
+    protected function addRouteCache(): void
     {
-        $fn = new ReflectionMethod($className, $action);
-
-        if (!$fn->isPublic()) {
-            throw new ServerRuntimeException("{$className}::{$action} must be public method.");
-        }
-
-        //检查该方法的参数是否符合要求
-        $paramNum = $fn->getNumberOfParameters();
-        if ($paramNum != 3) {
-            throw new ServerRuntimeException("{$className}::{$action} must has three parameter.");
-        }
-
-        $parames = $fn->getParameters();
-        // 第一个参数(字段值),类型不固定
-        // 第二个参数(字段名),类型string
-        // 第三个参数(参数选项),类型array
-        if ($parames[1]->getType()->getName() != 'string') {
-            $name = $parames[1]->getName();
-            throw new ServerRuntimeException("{$className}::{$action} the 2rd parameter[{$name}] type must be string");
-        }
-        if ($parames[2]->getType()->getName() != 'array') {
-            $name = $parames[2]->getName();
-            throw new ServerRuntimeException("{$className}::{$action} the 3rd parameter[{$name}] type must be array");
-        }
-
-        //是否有返回值
-        if (!$fn->hasReturnType() || $fn->getReturnType()->getName() != 'array') {
-            throw new ServerRuntimeException("{$className}::{$action} the return type must be array");
-        }
-    }
-
-
-    /**
-     * 添加路由缓存
-     */
-    protected function addToRouteCache(): void
-    {
-        $cache = new \stdClass();
-        $apianno = new ApiAnnotation();
-        foreach ($this->tmp as $key => $item) {
-            if (empty($item)) {
-                $cache->$key = null;
-            } else {
-                $cache->$key = new \stdClass();
-                foreach ($item as $paramType => $rules) {
-                    $cache->$key->$paramType = $rules;
-                }
-            }
-        }
-        $apianno->setRouteCache($cache);
-        $apianno->setEnums($this->enums);
-        $this->tmp = [];
+        $apiAnnotation = new ApiAnnotation();
+        $tmps = json_decode(json_encode($this->tmps));
+        $apiAnnotation->setRouteCache($tmps);
+        $apiAnnotation->setEnumsClass($this->enumClass);
+        $apiAnnotation->setCustomValidator($this->customValidator);
+        $this->tmps = [];
         $container = ApplicationContext::getContainer();
-        $container->set(ApiAnnotation::class, $apianno);
+        $container->set(ApiAnnotation::class, $apiAnnotation);
     }
-
 
 }

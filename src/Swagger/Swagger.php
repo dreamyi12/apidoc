@@ -94,7 +94,7 @@ class Swagger
         $properties = [];
         foreach ($baseSchema as $key => $val) {
             $item = [
-                'type' => ApiAnnotation::getTypeByValue($val),
+                'type' => gettype($val),
                 'example' => is_array($val) ? [] : (is_object($val) ? new \stdClass() : $val),
             ];
 
@@ -128,7 +128,29 @@ class Swagger
         }
     }
 
+    /**
+     *
+     * @param $value
+     * @return string
+     */
+    public static function getTypeByValue($value): string
+    {
+        if (ValidateHelper::isInteger($value)) {
+            return 'integer';
+        } elseif (ValidateHelper::isFloat($value)) {
+            return 'float';
+        } elseif (is_numeric($value)) {
+            return 'number';
+        } elseif (is_bool($value)) {
+            return 'boolean';
+        } elseif (is_array($value)) {
+            return ValidateHelper::isAssocArray($value) ? 'object' : 'array';
+        } elseif (is_object($value)) {
+            return 'object';
+        }
 
+        return 'string';
+    }
     /**
      * 根据名称解析响应结构模型
      * @param string $controller 控制器类
@@ -153,7 +175,7 @@ class Swagger
         $properties = self::parseSchemaNestedData($schemaData, $methods);
 
         //添加到swagger模型定义列表
-        $type = ApiAnnotation::getTypeByValue($schemaData);
+        $type = self::getTypeByValue($schemaData);
         $schemaModel = [
             'type' => $type,
         ];
@@ -217,7 +239,7 @@ class Swagger
             }
 
             if (is_null($newVal)) {
-                $type = ApiAnnotation::getTypeByValue($val);
+                $type = self::getTypeByValue($val);
                 $newVal = [
                     'type' => $type,
                 ];
@@ -365,7 +387,7 @@ class Swagger
      * @param mixed $version ApiVersion
      * @throws AnnotationException
      */
-    public function addPath(string $className, string $methodName, string $path, $enums = [], $version = null): void
+    public function addPath(string $className, string $methodName, string $path, $version = null): void
     {
         //获取类文件的注解信息
         $classAnnotation = ApiAnnotation::getClassMetadata($className);
@@ -375,13 +397,7 @@ class Swagger
         $paths = [];
         $responses = [];
 
-        //检查版本号是否合法
-        $hasVersion = is_object($version) && ($version instanceof ApiVersion) && !empty($version->group);
-        if ($hasVersion) {
-            if (!ApiAnnotation::isVersion($version->group)) {
-                throw new RuntimeException("Version group name can only be in english, numerals, and underscores:{$className}[{$version->group}]");
-            }
-        }
+
 
         //先处理该控制器类中定义的结构模型
         $methods = self::getSchemaMethods($className);
@@ -415,12 +431,13 @@ class Swagger
         $paths[$path][$method] = [
             'tags' => [$tagName,],
             'summary' => $reqMethod->summary,
-            'parameters' => $this->makeParameters($params, $path, $enums), //接口默认接收的MIME类型
+            'parameters' => $this->makeParameters($params, $path), //接口默认接收的MIME类型
             'consumes' => ['application/x-www-form-urlencoded', 'application/json', 'multipart/form-data',], //接口默认的响应类型
             'produces' => ['application/json',],
             'responses' => $this->makeResponses($responses, $path, $method),
             'description' => $reqMethod->description,
         ];
+        $hasVersion = is_object($version) && ($version instanceof ApiVersion) && !empty($version->group);
         if ($hasVersion) {
             $this->confSwagger['version_tags'][$version->group][$tagName] = $tagInfo;
             $this->addGroupInfo($version->group, $version->description, $paths);
@@ -482,7 +499,7 @@ class Swagger
      * @param string $path
      * @return array
      */
-    public function makeParameters(array $params, string $path, $enums = []): array
+    public function makeParameters(array $params, string $path): array
     {
         $path = self::turnPath($path);
         $parameters = [];
@@ -534,13 +551,13 @@ class Swagger
                 $parameters[$item->name]['default'] = $item->default;
             }
 
-            if (!is_null($item->enum)) {
-                [$enumName] = $item->enum;
-                if(!isset($enums[$enumName])){
-                    throw new RuntimeException("The enumeration `{$enumName}` class is not defined ");
-                }
-                $parameters[$item->name]['enum'] = array_keys($enums[$enumName]::getEnums());
-            }
+//            if (!is_null($item->enum)) {
+//                [$enumName] = $item->enum;
+//                if(!isset($enums[$enumName])){
+//                    throw new RuntimeException("The enumeration `{$enumName}` class is not defined ");
+//                }
+//                $parameters[$item->name]['enum'] = array_keys($enums[$enumName]::getEnums());
+//            }
 
             //字段值举例
             if (!is_null($item->example)) {

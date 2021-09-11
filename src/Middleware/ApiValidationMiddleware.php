@@ -51,7 +51,8 @@ use Throwable;
  * Class ApiValidationMiddleware
  * @package Dreamyi12\ApiDoc\Middleware
  */
-class ApiValidationMiddleware extends CoreMiddleware {
+class ApiValidationMiddleware extends CoreMiddleware
+{
 
     /**
      * @var RequestInterface
@@ -77,11 +78,12 @@ class ApiValidationMiddleware extends CoreMiddleware {
      * @param HttpResponse $response
      * @param RequestInterface $request
      */
-    public function __construct(ContainerInterface $container, HttpResponse $response, RequestInterface $request) {
+    public function __construct(ContainerInterface $container, HttpResponse $response, RequestInterface $request)
+    {
         $this->response = $response;
-        $this->request  = $request;
+        $this->request = $request;
 
-        $server     = $container->get(Server::class);
+        $server = $container->get(Server::class);
         $serverName = (string)$server->getServerName();
 
         parent::__construct($container, $serverName ? $serverName : Consts::UNKNOWN);
@@ -96,8 +98,9 @@ class ApiValidationMiddleware extends CoreMiddleware {
      * @throws AnnotationException
      * @throws ReflectionException
      */
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
-        $uri    = $request->getUri();
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        $uri = $request->getUri();
         $routes = $this->dispatcher->dispatch($request->getMethod(), $uri->getPath());
 
         if ($routes[0] !== Dispatcher::FOUND) {
@@ -115,64 +118,37 @@ class ApiValidationMiddleware extends CoreMiddleware {
         }
 
         $controllerInstance = $this->container->get($controller);
+        $globalConf = $this->container->get(ConfigInterface::class);
 
-        //执行控制器前置方法
-        $globalConf   = $this->container->get(ConfigInterface::class);
-        $beforeAction = $globalConf->get('apihelper.api.controller_antecedent');
-        if (!empty($beforeAction) && method_exists($controllerInstance, $beforeAction)) {
-            //先于动作之前调用
-            try {
-                $beforeRet = call_user_func_array([$controllerInstance, $beforeAction], [$request]);
-            } catch (Throwable $e) {
-                throw new RuntimeException($e);
-            }
-
-            $request = $beforeRet;
-        }
-
-        //检查控制器后置方法
-        $subsequentAction = $globalConf->get('apihelper.api.controller_subsequent');
-        $subsequentAction = !empty($subsequentAction) && method_exists($controllerInstance, $subsequentAction) ? $subsequentAction : null;
-
-        //确保执行后置方法
-        $doAfter = function (ResponseInterface $response) use ($request, $controllerInstance, $subsequentAction): ResponseInterface {
-            if ($subsequentAction) {
-                try {
-                    call_user_func_array([$controllerInstance, $subsequentAction], [$request, $response]);
-                } catch (Throwable $e) {
-                    throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
-                }
-            }
-
+        $doAfter = function (ResponseInterface $response): ResponseInterface {
             return $response;
         };
 
-        $ruleObj       = $this->container->get(ApiAnnotation::class)->getRouteCache();
-        $ctrlAct       = $controller . Consts::PAAMAYIM_NEKUDOTAYIM . $action;
+        $ruleObj = $this->container->get(ApiAnnotation::class)->getRouteCache();
+        $ctrlAct = $controller . "::" . $action;
         $baseCtrlClass = $globalConf->get('apihelper.api.base_controller');
         if (isset($ruleObj->$ctrlAct)) {
             // 先处理BODY规则
             $typeBody = BaseObject::getShortName(Body::class);
             if (isset($ruleObj->$ctrlAct->$typeBody)) {
                 $data = [Body::NAME => $request->getBody()->getContents()];
-                [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeBody, $data, [], $controllerInstance);
+                [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeBody), $data, [], $controllerInstance);
                 if (!empty($error)) {
                     return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
                 $request = $request->withBody(new SwooleStream($data[Body::NAME] ?? ''));
             }
-            $query_where = [];
             // 各请求方法的数据
-            $headers   = array_map(function ($item) {
+            $headers = array_map(function ($item) {
                 return $item[0] ?? null;
             }, $request->getHeaders());
             $queryData = $request->getQueryParams();
-            $postData  = $request->getParsedBody();
-            $allData   = array_merge($headers, $queryData, $postData);
+            $postData = $request->getParsedBody();
+            $allData = array_merge($headers, $queryData, $postData);
 
             $typeHeader = BaseObject::getShortName(Header::class);
             if (isset($ruleObj->$ctrlAct->$typeHeader)) {
-                [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeHeader, $headers, $allData, $controllerInstance);
+                [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeHeader), $headers, $allData, $controllerInstance);
                 if (!empty($error)) {
                     return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
@@ -181,7 +157,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
             $typePath = BaseObject::getShortName(Path::class);
             if (isset($ruleObj->$ctrlAct->$typePath)) {
                 $pathData = $routes[2] ?? [];
-                [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typePath, $pathData, $allData, $controllerInstance);
+                [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typePath), $pathData, $allData, $controllerInstance);
                 if (!empty($error)) {
                     return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
@@ -189,10 +165,10 @@ class ApiValidationMiddleware extends CoreMiddleware {
 
             $typeQuery = BaseObject::getShortName(Query::class);
             if (isset($ruleObj->$ctrlAct->$typeQuery)) {
-                if(!empty($ruleObj->$ctrlAct->$typeQuery['where'])){
-                    Context::set('validator.where', $ruleObj->$ctrlAct->$typeQuery['where']);
+                if (!empty($ruleObj->$ctrlAct->$typeQuery->where)) {
+                    Context::set('validator.where', $ruleObj->$ctrlAct->$typeQuery->where);
                 }
-                [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeQuery, $queryData, $allData, $controllerInstance);
+                [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeQuery), $queryData, $allData, $controllerInstance);
                 if (!empty($error)) {
                     return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
@@ -201,10 +177,10 @@ class ApiValidationMiddleware extends CoreMiddleware {
             $typeForm = BaseObject::getShortName(Form::class);
 
             if (isset($ruleObj->$ctrlAct->$typeForm)) {
-                if(!empty($ruleObj->$ctrlAct->$typeForm['where'])){
-                    Context::set('validator.where', $ruleObj->$ctrlAct->$typeForm['where']);
+                if (!empty($ruleObj->$ctrlAct->$typeForm->where)) {
+                    Context::set('validator.where', $ruleObj->$ctrlAct->$typeForm->where);
                 }
-                [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeForm, $postData, $allData, $controllerInstance);
+                [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeForm), $postData, $allData, $controllerInstance);
                 if (!empty($error)) {
                     return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
@@ -214,7 +190,7 @@ class ApiValidationMiddleware extends CoreMiddleware {
             //文件上传
             $typeFile = BaseObject::getShortName(File::class);
             if (isset($ruleObj->$ctrlAct->$typeFile)) {
-                [$data, $error] = $this->checkRules($ruleObj->$ctrlAct->$typeFile, $request->getUploadedFiles(), $allData, $controllerInstance);
+                [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeFile), $request->getUploadedFiles(), $allData, $controllerInstance);
                 if (!empty($error)) {
                     return $doAfter($this->response->json($baseCtrlClass::validationFail($error)));
                 }
@@ -223,22 +199,6 @@ class ApiValidationMiddleware extends CoreMiddleware {
         }
 
         Context::set(ServerRequestInterface::class, $request);
-
-        //执行控制器拦截方法
-        $interceptAction = $globalConf->get('apihelper.api.controller_intercept');
-        if (!empty($interceptAction) && method_exists($controllerInstance, $interceptAction)) {
-            //先于动作之前调用
-            try {
-                $ret = call_user_func_array([$controllerInstance, $interceptAction], [$controller, $action, ($routes[1]->route ?? '')]);
-                //若返回非空的数组或字符串,则终止后续动作的执行
-                if (!empty($ret) && (is_array($ret) || is_string($ret))) {
-                    return $doAfter(is_array($ret) ? $this->response->json($ret) : $this->response->raw($ret));
-                }
-            } catch (Throwable $e) {
-                throw new RuntimeException($e->getMessage(), $e->getCode(), $e);
-            }
-        }
-
         $response = $handler->handle($request);
 
         return $doAfter($response);
@@ -253,7 +213,8 @@ class ApiValidationMiddleware extends CoreMiddleware {
      * @param object $controller
      * @return array
      */
-    public function checkRules(array $rules, array $data, array $otherData, object $controller): array {
+    public function checkRules(array $rules, array $data, array $otherData, object $controller): array
+    {
         [$validatedData, $errors] = $this->validation->validate($rules, $data, $otherData, $controller);
         $error = empty($errors) ? '' : current($errors);
 

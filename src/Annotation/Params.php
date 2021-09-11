@@ -11,9 +11,13 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Annotation;
 
+use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
 use Dreamyi12\ApiDoc\ApiAnnotation;
 use Dreamyi12\ApiDoc\Validation\Validator;
+use Hyperf\Constants\ConstantsCollector;
 use Hyperf\Di\Annotation\AbstractAnnotation;
+use Hyperf\Di\Annotation\AnnotationCollector;
+use Hyperf\Utils\ApplicationContext;
 
 
 /**
@@ -165,10 +169,36 @@ class Params extends AbstractAnnotation
      */
     public function setDescription(string $desc = '')
     {
+
+        $data = AnnotationCollector::list();
+        $rules = explode('|', $this->rule);
+
+        $enums = $enumtypes = "";
+        foreach ($rules as $rule) {
+            $enum = explode(":", $rule);
+            if ($enum && $enum[0] == "enum") {
+                $enums = $enum[1];
+            }
+        }
+        if ($enums) {
+            foreach ($data as $className => $metadata) {
+                //优先处理枚举类
+                if (isset($metadata['_c'][EnumClass::class]) && $metadata['_c'][EnumClass::class]->name == $enums) {
+                    $class_enums = $className::getEnums();
+                    $enumtypes = ',例如:';
+                    if ($class_enums) {
+                        foreach ($class_enums as $value => $enumsvalue) {
+                            $enumtypes .= $enumsvalue ? "{$value}=>{$enumsvalue['text']} " : "";
+                        }
+                    }
+                }
+            }
+        }
         if (!empty($desc)) {
             $this->description = $desc;
         } else {
             $this->description = $this->description ?: explode('|', strval($this->key))[1] ?? $this->name;
+            $this->description = $this->description . $enumtypes;
         }
 
         return $this;
@@ -182,12 +212,62 @@ class Params extends AbstractAnnotation
     public function setDetailRules()
     {
         if (!empty($this->rule)) {
-            $this->_detailRules = ApiAnnotation::parseDetailsByRule($this->rule);
+            $this->_detailRules = ApiAnnotation::parseByRule($this->rule);
         }
 
         return $this;
     }
 
+
+
+
+
+    /**
+     * @param string $rule
+     * @return string
+     */
+    public function getTypeByRule(string $rule): string
+    {
+        $details = ApiAnnotation::parseByRule($rule);
+        $type = ['gt', 'gte', 'lt', 'lte', 'max', 'min', 'between'];
+
+        $digitItem = in_array($rule, $type) ? $rule : false;
+
+        if (array_intersect($details, ['integer', 'int'])) {
+            return 'integer';
+        } elseif (array_intersect($details, ['float'])) {
+            return 'float';
+        } elseif (array_intersect($details, ['number', 'numeric'])) {
+            return 'number';
+        } elseif (array_intersect($details, ['boolean', 'bool'])) {
+            return 'boolean';
+        } elseif (array_intersect($details, ['array'])) {
+            return 'array';
+        } elseif (array_intersect($details, ['object'])) {
+            return 'object';
+        } elseif (array_intersect($details, ['file', 'image'])) {
+            return 'file';
+        } elseif (array_intersect($details, ['string', 'trim'])) {
+            return 'string';
+        } elseif ($digitItem) {
+            foreach ($details as $detail) {
+                if (strpos($detail, ':') && stripos($detail, $digitItem) !== false) {
+                    //是否有规则选项,如 between:1,20 中的 :1,20
+                    preg_match('/:(.*)/', $detail, $match);
+                    $options = $match[1] ?? '';
+                    $arr = explode(',', $options);
+                    $first = $arr[0] ?? '';
+                    if (is_float($first)) {
+                        return 'float';
+                    } elseif (is_integer($first)) {
+                        return 'integer';
+                    }
+                }
+            }
+        }
+
+        return 'string';
+    }
 
     /**
      * 设置字段是否必填
@@ -230,7 +310,7 @@ class Params extends AbstractAnnotation
         }
 
         if (empty($type)) {
-            $type = ApiAnnotation::getTypeByRule($this->rule);
+            $type = $this->getTypeByRule($this->rule);
         }
 
         $this->type = $type;
