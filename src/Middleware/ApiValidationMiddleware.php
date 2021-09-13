@@ -146,6 +146,7 @@ class ApiValidationMiddleware extends CoreMiddleware
             $postData = $request->getParsedBody();
             $allData = array_merge($headers, $queryData, $postData);
 
+
             $typeHeader = BaseObject::getShortName(Header::class);
             if (isset($ruleObj->$ctrlAct->$typeHeader)) {
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeHeader), $headers, $allData, $controllerInstance);
@@ -165,6 +166,13 @@ class ApiValidationMiddleware extends CoreMiddleware
 
             $typeQuery = BaseObject::getShortName(Query::class);
             if (isset($ruleObj->$ctrlAct->$typeQuery)) {
+                //将默认值加入到数据当中
+                if ($ruleObj->$ctrlAct->$typeQuery->default) {
+                    foreach (get_object_vars($ruleObj->$ctrlAct->$typeQuery->default) as $field => $value) {
+                        if (!isset($allData[$field]))
+                            $allData[$field] = $value;
+                    }
+                }
                 if (!empty($ruleObj->$ctrlAct->$typeQuery->where)) {
                     Context::set('validator.where', $ruleObj->$ctrlAct->$typeQuery->where);
                 }

@@ -45,7 +45,7 @@ class Condition
                 $whereParam->setValue($field_value);
             }
 
-            if (empty($whereParam->getValue())) {
+            if ($whereParam->getValue() === null) {
                 continue;
             }
             $this->whereParams[$field] = $whereParam;

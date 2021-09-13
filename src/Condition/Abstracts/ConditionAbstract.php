@@ -46,7 +46,7 @@ abstract class ConditionAbstract implements ConditionInterface
             if (!method_exists($this, $option->getOp())) {
                 throw new \Exception("The {$field} method does not exist");
             }
-            if (empty($option->getValue())) {
+            if ($option->getValue() === null) {
                 continue;
             }
             if ($option->getOp() === "has") {

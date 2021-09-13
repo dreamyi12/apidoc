@@ -325,23 +325,7 @@ class Params extends AbstractAnnotation
      */
     public function setDefault()
     {
-        if (empty($this->_detailRules)) {
-            $this->setDetailRules();
-        }
-        foreach ($this->_detailRules as $detailRule) {
-            if (stripos($detailRule, 'default') !== false) {
-                $optionStr = explode(':', $detailRule)[1] ?? '';
-                $optionArr = explode(',', $optionStr);
-                if ($optionStr == '' && empty($optionArr)) {
-                    array_push($optionArr, '');
-                }
-                $len = count($optionArr);
-
-                $this->default = $len == 1 ? current($optionArr) : $optionArr;
-                break;
-            }
-        }
-
+        print_r(  $this->default);
         return $this;
     }
 

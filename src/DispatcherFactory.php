@@ -184,10 +184,14 @@ class DispatcherFactory extends BaseDispatcherFactory
                 if (!empty($annotation->path)) {
                     $path[$fieldName] = $annotation->path;
                 }
+                if ($annotation->default !== null) {
+                    $default[$fieldName] = $annotation->default;
+                }
                 $rules[$paramType] = [
                     'path' => isset($path) ? $path : [],
                     'function' => isset($function) ? $function : [],
                     'where' => isset($query_where) ? $query_where : [],
+                    'default' => isset($default) ? $default : [],
                     'frames' => $frames,
                     'customs' => $customs,
                 ];
