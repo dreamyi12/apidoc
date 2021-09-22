@@ -70,7 +70,7 @@ abstract class EnumConstants extends AbstractConstants
                     $correspond[static::$method($value)] = $value;
                 }
             }
-            return $correspond[$arguments[0]];
+            return isset($correspond[$arguments[0]]) ? $correspond[$arguments[0]] : 0;
         } else {
             return parent::__callStatic($method_name, $arguments);
         }
