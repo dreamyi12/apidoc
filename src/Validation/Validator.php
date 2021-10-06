@@ -93,7 +93,7 @@ class Validator implements ValidationInterface
         [$newData, $frameError] = $this->frameValidate($allData, $rules);
 
         $newData = array_merge($newData, $this->handleFileUpload($rules['path']));
-        $newData = $this->handleFunction($newData, get_object_vars($rules['function']));
+        $newData = $this->handleFunction($newData, is_array($rules['function']) ? $rules['function'] : get_object_vars($rules['function']));
         $errors = [];
         Context::set('validator.data', $newData);
         $data = array_merge($data, $newData);
@@ -117,7 +117,7 @@ class Validator implements ValidationInterface
             if (empty($customRules)) continue;
             [$field, $filed_name] = explode('|', $fields);
             $fieldValue = data_get($data, $field);
-            if(empty($fieldValue)) continue;
+            if (empty($fieldValue)) continue;
             foreach ($customRules as $customRule) {
                 $ruleName = ApiAnnotation::parseRuleName($customRule);
                 //获得规则中的
