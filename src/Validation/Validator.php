@@ -93,7 +93,7 @@ class Validator implements ValidationInterface
         [$newData, $frameError] = $this->frameValidate($allData, $rules);
 
         $newData = array_merge($newData, $this->handleFileUpload($rules['path']));
-        $newData = $this->handleFunction($newData, $rules['function']);
+        $newData = $this->handleFunction($newData, get_object_vars($rules['function']));
         $errors = [];
         Context::set('validator.data', $newData);
         $data = array_merge($data, $newData);
@@ -193,7 +193,7 @@ class Validator implements ValidationInterface
     function handleFunction($data, $functions): array
     {
         foreach ($functions as $field => $function) {
-            if (empty($newData[$field]) || !function_exists($function))
+            if (empty($data[$field]) || !function_exists($function))
                 continue;
             $data[$field] = $function($data[$field]);
 
