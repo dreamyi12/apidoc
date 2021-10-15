@@ -155,7 +155,7 @@ class DispatcherFactory extends BaseDispatcherFactory
     private function parseController(string $className): void
     {
         $this->checkBaseController($className);
-        
+
         $refObj = new ReflectionClass($className);
         $methods = $refObj->getMethods(ReflectionMethod::IS_PUBLIC);
         foreach ($methods as $methodObj) {
@@ -212,22 +212,24 @@ class DispatcherFactory extends BaseDispatcherFactory
         $customs = $frames = [];
         foreach ($rules as $rule) {
             $ruleName = ApiAnnotation::parseRuleName($rule);
+            $frameMethod = Str::camel('validate_' . $ruleName);
             //Customize validation rules
             if (Arr::has($this->customValidator, $ruleName)) {
                 $customs[] = $rule;
-            }
-            $frameMethod = Str::camel('validate_' . $ruleName);
-            // Framework validation rules
-            if (method_exists(ValidatesAttributes::class, $frameMethod)) {
+                // Framework validation rules
+            }else if (method_exists(ValidatesAttributes::class, $frameMethod)) {
                 $frames[] = $rule;
-            } else if (!array_key_exists($ruleName, $this->customValidator)) {
+            } else {
                 throw new ServerRuntimeException("The rule not defined: {$ruleName}");
             }
         }
         return [Arr::sortRecursive($customs), Arr::sortRecursive($frames)];
     }
 
-
+    /**
+     * @param array $rules
+     * @return array
+     */
     public function sortDetailRules(array $rules): array
     {
         $priorities = ['default', 'required', 'int', 'integer', 'bool', 'boolean', 'number', 'numeric', 'float', 'string', 'array', 'object'];
