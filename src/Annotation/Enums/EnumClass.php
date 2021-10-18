@@ -11,13 +11,12 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Annotation\Enums;
 
-use Hyperf\Di\Annotation\AbstractAnnotation;
-
+use Dreamyi12\ApiDoc\Annotation\Abstracts\CustomAnnotation;
 /**
  * @Annotation
  * @Target({"CLASS"})
  */
-class EnumClass  extends AbstractAnnotation {
+class EnumClass  extends CustomAnnotation {
 
     /**
      * 收集名称

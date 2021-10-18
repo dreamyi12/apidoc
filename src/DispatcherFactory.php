@@ -13,7 +13,9 @@ namespace Dreamyi12\ApiDoc;
 
 use Doctrine\Common\Annotations\AnnotationException;
 use Dreamyi12\ApiDoc\Annotation\ApiController;
+use Dreamyi12\ApiDoc\Annotation\Collector\CustomCollector;
 use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
+use Dreamyi12\ApiDoc\Annotation\Model\ModelClass;
 use Dreamyi12\ApiDoc\Annotation\Methods;
 use Dreamyi12\ApiDoc\Annotation\Params;
 use Dreamyi12\ApiDoc\Annotation\Validator\CustomValidator;
@@ -57,16 +59,6 @@ class DispatcherFactory extends BaseDispatcherFactory
     protected array $tmps;
 
     /**
-     * @var array
-     */
-    protected array $customValidator = [];
-
-    /**
-     * @var array
-     */
-    protected array $enumClass = [];
-
-    /**
      * DispatcherFactory constructor.
      */
     public function __construct()
@@ -106,14 +98,7 @@ class DispatcherFactory extends BaseDispatcherFactory
         parent::initAnnotationRoute($collector);
 
         foreach ($collector as $className => $metadata) {
-            if (isset($metadata['_c'][EnumClass::class])) {
-                $class = $metadata['_c'][EnumClass::class];
-                $this->enumClass[$class->name] = $className;
-            }
-            if (isset($metadata['_c'][CustomValidator::class])) {
-                $class = $metadata['_c'][CustomValidator::class];
-                $this->customValidator[$class->name] = $className;
-            }
+            //控制器
             if (isset($metadata['_c'][ApiController::class])) {
                 $middlewares = $this->handleMiddleware($metadata['_c']);
                 $middlewareData[] = ['middlewares' => $middlewares, 'class_name' => $className, 'metadata' => $metadata];
@@ -214,7 +199,7 @@ class DispatcherFactory extends BaseDispatcherFactory
             $ruleName = ApiAnnotation::parseRuleName($rule);
             $frameMethod = Str::camel('validate_' . $ruleName);
             //Customize validation rules
-            if (Arr::has($this->customValidator, $ruleName)) {
+            if (Arr::has(CustomCollector::getAnnotationByClasses(CustomValidator::class), $ruleName)) {
                 $customs[] = $rule;
                 // Framework validation rules
             }else if (method_exists(ValidatesAttributes::class, $frameMethod)) {
@@ -335,8 +320,6 @@ class DispatcherFactory extends BaseDispatcherFactory
         $apiAnnotation = new ApiAnnotation();
         $tmps = json_decode(json_encode($this->tmps));
         $apiAnnotation->setRouteCache($tmps);
-        $apiAnnotation->setEnumsClass($this->enumClass);
-        $apiAnnotation->setCustomValidator($this->customValidator);
         $this->tmps = [];
         $container = ApplicationContext::getContainer();
         $container->set(ApiAnnotation::class, $apiAnnotation);

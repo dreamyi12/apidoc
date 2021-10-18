@@ -30,8 +30,8 @@ use Kph\Helpers\ValidateHelper;
 use League\Flysystem\Filesystem;
 use Psr\Container\ContainerInterface;
 use function PHPUnit\Framework\isJson;
-
-
+use Dreamyi12\ApiDoc\Annotation\Collector\CustomCollector;
+use Dreamyi12\ApiDoc\Annotation\Validator\CustomValidator;
 /**
  * Class Validator
  * @package Dreamyi12\ApiDoc\Validation
@@ -126,7 +126,7 @@ class Validator implements ValidationInterface
                 if ($optionParams == '' && empty($optionParams)) {
                     array_push($optionParam, '');
                 }
-                $customValidator = $this->container->get(ApiAnnotation::class)->getCustomValidator();
+                $customValidator = CustomCollector::getAnnotationByClasses(CustomValidator::class);
                 if (!isset($customValidator[$ruleName])) {
                     throw new ValidationException("The set validation rule `{$ruleName}` does not exist");
                 }

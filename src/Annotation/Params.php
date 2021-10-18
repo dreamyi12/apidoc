@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Annotation;
 
+use Dreamyi12\ApiDoc\Annotation\Collector\CustomCollector;
 use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
 use Dreamyi12\ApiDoc\ApiAnnotation;
 use Dreamyi12\ApiDoc\Validation\Validator;
@@ -178,19 +179,10 @@ class Params extends AbstractAnnotation
             $enum = explode(":", $rule);
             if ($enum && $enum[0] == "enum") {
                 $enums = $enum[1];
-            }
-        }
-        if ($enums) {
-            foreach ($data as $className => $metadata) {
-                //优先处理枚举类
-                if (isset($metadata['_c'][EnumClass::class]) && $metadata['_c'][EnumClass::class]->name == $enums) {
-                    $class_enums = $className::getEnums();
-                    $enumtypes = ',例如:';
-                    if ($class_enums) {
-                        foreach ($class_enums as $value => $enumsvalue) {
-                            $enumtypes .= $enumsvalue ? "{$value}=>{$enumsvalue['text']} " : "";
-                        }
-                    }
+                $className = CustomCollector::getAnnotationByClasses(EnumClass::class, $enums);
+                $class_enums = $className::getEnums();
+                foreach ($class_enums as $value => $enumsvalue) {
+                    $enumtypes .= $enumsvalue ? "{$value}=>{$enumsvalue['text']} " : "";
                 }
             }
         }
@@ -217,9 +209,6 @@ class Params extends AbstractAnnotation
 
         return $this;
     }
-
-
-
 
 
     /**
@@ -325,7 +314,7 @@ class Params extends AbstractAnnotation
      */
     public function setDefault()
     {
-        print_r(  $this->default);
+        print_r($this->default);
         return $this;
     }
 
