@@ -174,23 +174,10 @@ class Params extends AbstractAnnotation
         $data = AnnotationCollector::list();
         $rules = explode('|', $this->rule);
 
-        $enums = $enumtypes = "";
-        foreach ($rules as $rule) {
-            $enum = explode(":", $rule);
-            if ($enum && $enum[0] == "enum") {
-                $enums = $enum[1];
-                $className = CustomCollector::getAnnotationByClasses(EnumClass::class, $enums);
-                $class_enums = $className::getEnums();
-                foreach ($class_enums as $value => $enumsvalue) {
-                    $enumtypes .= $enumsvalue ? "{$value}=>{$enumsvalue['text']} " : "";
-                }
-            }
-        }
         if (!empty($desc)) {
             $this->description = $desc;
         } else {
             $this->description = $this->description ?: explode('|', strval($this->key))[1] ?? $this->name;
-            $this->description = $this->description . $enumtypes;
         }
 
         return $this;
@@ -314,7 +301,6 @@ class Params extends AbstractAnnotation
      */
     public function setDefault()
     {
-        print_r($this->default);
         return $this;
     }
 

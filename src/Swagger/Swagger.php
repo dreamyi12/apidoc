@@ -32,6 +32,8 @@ use Kph\Helpers\ValidateHelper;
 use Kph\Objects\BaseObject;
 use ReflectionException;
 use ReflectionMethod;
+use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
+use Dreamyi12\ApiDoc\Annotation\Collector\CustomCollector;
 
 /**
  * Class Swagger
@@ -151,6 +153,7 @@ class Swagger
 
         return 'string';
     }
+
     /**
      * 根据名称解析响应结构模型
      * @param string $controller 控制器类
@@ -398,7 +401,6 @@ class Swagger
         $responses = [];
 
 
-
         //先处理该控制器类中定义的结构模型
         $methods = self::getSchemaMethods($className);
         foreach ($methods as $method) {
@@ -517,7 +519,14 @@ class Swagger
                 });
                 $dotName = implode('', $arr);
             }
-
+            if($item->enum){
+                $className = CustomCollector::getAnnotationByClasses(EnumClass::class, $item->enum[0]);
+                $class_enums = $className::getEnums();
+                $item->description .= ",例如: ";
+                foreach ($class_enums as $value => $enumsvalue) {
+                    $item->description .= $enumsvalue ? "{$value}=>{$enumsvalue['text']} " : "";
+                }
+            }
             $property = [
                 'in' => $item->in,
                 'name' => $hasDot ? $dotName : $item->name,
