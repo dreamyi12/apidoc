@@ -117,7 +117,7 @@ class Validator implements ValidationInterface
             if (empty($customRules)) continue;
             [$field, $filed_name] = explode('|', $fields);
             $fieldValue = data_get($data, $field);
-            if (empty($fieldValue)) continue;
+            if (empty($fieldValue) || (is_array($fieldValue)) && empty(end($fieldValue))) continue;
             foreach ($customRules as $customRule) {
                 $ruleName = ApiAnnotation::parseRuleName($customRule);
                 //获得规则中的
