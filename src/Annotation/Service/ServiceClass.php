@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Dreamyi12\ApiDoc\Annotation\Model;
+namespace Dreamyi12\ApiDoc\Annotation\Service;
 
 use Dreamyi12\ApiDoc\Annotation\Abstracts\CustomAnnotation;
 
@@ -17,7 +17,7 @@ use Dreamyi12\ApiDoc\Annotation\Abstracts\CustomAnnotation;
  * @Annotation
  * @Target({"CLASS"})
  */
-class ModelClass extends CustomAnnotation {
+class ServiceClass extends CustomAnnotation {
 
     /**
      * 收集名称
