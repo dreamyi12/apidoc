@@ -25,6 +25,7 @@ class ConfigProvider {
                 'scan' => [
                     'paths' => [
                         __DIR__,
+                        __DIR__."Validation\Rule",
                     ],
                 ],
             ],
