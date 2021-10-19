@@ -53,6 +53,7 @@ abstract class CustomValidatorFactory implements CustomValidatorInterface
      */
     protected $adminLogin;
 
+
     public function __construct(TranslatorInterface $translator)
     {
         $this->translator = $translator;
