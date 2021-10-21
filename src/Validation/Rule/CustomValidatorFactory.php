@@ -57,15 +57,6 @@ abstract class CustomValidatorFactory implements CustomValidatorInterface
     public function __construct(TranslatorInterface $translator)
     {
         $this->translator = $translator;
-        $token = $this->request->getHeaderLine('Authorization') ?? '';
-        if (strlen($token) > 0) {
-            $token = JWTUtil::handleToken($token);
-            if ($token !== false && $this->jwt->setScene('enterprise')->checkToken($token)) {
-                $this->enterpriseLogin->setUser($this->jwt->setScene('enterprise')->getParserData());
-            }else if ($token !== false && $this->jwt->setScene('client')->checkToken($token)) {
-                $this->clientLogin->setUser($this->jwt->setScene('client')->getParserData());
-            }
-        }
     }
 
 
