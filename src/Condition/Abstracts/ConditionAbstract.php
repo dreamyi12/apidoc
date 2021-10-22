@@ -49,6 +49,9 @@ abstract class ConditionAbstract implements ConditionInterface
             if ($option->getValue() === null) {
                 continue;
             }
+            if($option->getField()){
+                $field = $option->getField();
+            }
             if ($option->getOp() === "has") {
                 $relation = $option->getWith();
                 $option->setOp($option->getType());
