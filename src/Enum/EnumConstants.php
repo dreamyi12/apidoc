@@ -23,7 +23,7 @@ abstract class EnumConstants extends AbstractConstants
                 break;
             }
         }
-        return $value !== null ? $enums[$value] : $enums;
+        return $value !== null ? ($enums[$value] ?? 0)  : $enums;
     }
 
     /**
