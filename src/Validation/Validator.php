@@ -16,20 +16,12 @@ use Dreamyi12\ApiDoc\Exception\ValidationException;
 use Hyperf\Contract\TranslatorInterface;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
-use Hyperf\Server\Exception\RuntimeException;
 use Hyperf\Translation\TranslatorFactory;
-use Hyperf\Utils\ApplicationContext;
-use Hyperf\Utils\Arr;
 use Hyperf\Utils\Context;
-use Hyperf\Validation\Concerns\ValidatesAttributes;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use Hyperf\Validation\ValidatorFactory;
-use Kph\Helpers\ArrayHelper;
-use Kph\Helpers\StringHelper;
-use Kph\Helpers\ValidateHelper;
 use League\Flysystem\Filesystem;
 use Psr\Container\ContainerInterface;
-use function PHPUnit\Framework\isJson;
 use Dreamyi12\ApiDoc\Annotation\Collector\CustomCollector;
 use Dreamyi12\ApiDoc\Annotation\Validator\CustomValidator;
 /**
@@ -130,7 +122,7 @@ class Validator implements ValidationInterface
                 if (!isset($customValidator[$ruleName])) {
                     throw new ValidationException("The set validation rule `{$ruleName}` does not exist");
                 }
-                [$check, $err] = make($customValidator[$ruleName])->handle($data, $fieldValue, $filed_name, $optionParam);
+                [$check, $err] = make($customValidator[$ruleName])->handle($data, $fieldValue, $field, $filed_name, $optionParam);
                 if (!$check) array_push($errors, $err);
             }
         }

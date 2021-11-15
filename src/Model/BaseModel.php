@@ -2,7 +2,6 @@
 
 namespace Dreamyi12\ApiDoc\Model;
 
-use Dreamyi12\ApiDoc\Condition\Abstracts\ConditionAbstract;
 use Dreamyi12\ApiDoc\Condition\ConditionHandle;
 use Hyperf\Contract\Castable;
 use Hyperf\Contract\CastsAttributes;

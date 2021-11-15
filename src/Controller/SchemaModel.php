@@ -13,10 +13,8 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Controller;
 
-use Kph\Helpers\ArrayHelper;
 use Kph\Helpers\NumberHelper;
 use Kph\Helpers\StringHelper;
-use Kph\Objects\BaseObject;
 
 /**
  * Trait SchemaModel

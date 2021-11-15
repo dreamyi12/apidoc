@@ -14,13 +14,11 @@ namespace Dreamyi12\ApiDoc\Controller;
 interface ControllerInterface
 {
 
-
     /**
      * 获取结构-基本响应体(键值对数组)
      * @return array
      */
     public static function getSchemaResponse(): array;
-
 
     /**
      * 操作成功响应
@@ -30,7 +28,6 @@ interface ControllerInterface
      * @return array
      */
     public function success($data, string $message = '', int $code = 200);
-
 
     /**
      * 操作失败响应

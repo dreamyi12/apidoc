@@ -21,8 +21,6 @@ use Kph\Helpers\StringHelper;
 use Kph\Helpers\ValidateHelper;
 use Kph\Objects\BaseObject;
 use Psr\Container\ContainerInterface;
-use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class BaseController
@@ -118,50 +116,7 @@ abstract class BaseController extends BaseObject implements ControllerInterface
             'data' => [],
         ];
     }
-    /**
-     * 初始化方法(在具体动作之前执行).
-     * 不会中止后续具体动作的执行.
-     * @param ServerRequestInterface $request
-     * @return ServerRequestInterface
-     */
-    //    public function initialization(ServerRequestInterface $request): ServerRequestInterface {
-    //        //自定义处理逻辑,如 将数据存储到$request属性中
-    //        $request = $request->withAttribute('test', 'hello world');
-    //
-    //        //然后在具体动作里面获取数据
-    //        $test = $request->getAttribute('test');
-    //
-    //        return $request;
-    //    }
 
-
-    /**
-     * 拦截方法(在具体动作之前执行).
-     * 当返回非空的数组或字符串时,将中止后续具体动作的执行.
-     * @param string $controller 控制器类名
-     * @param string $action 方法名(待执行的动作)
-     * @param string $route 路由(url)
-     * @return array|null
-     */
-    //    public function interceptor(string $controller, string $action, string $route) {
-    //        if (false) {
-    //            return self::doFail();
-    //        }
-    //
-    //        return null;
-    //    }
-
-
-    /**
-     * 后置方法(在具体动作之后执行,无论是否执行了拦截方法).
-     * @param ServerRequestInterface $request
-     * @param PsrResponseInterface $response
-     */
-    //    public function after(ServerRequestInterface $request, PsrResponseInterface $response): void {
-    //        $uri  = $request->getRequestTarget();
-    //        $code = $response->getStatusCode();
-    //        printf("after action finish: code[%d] url[%s]\r", $code, $uri);
-    //    }
     /**
      * 根据结构名获取模型默认值
      * @param string $schemaStr
