@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Annotation\Casts;
 
-use Hyperf\Di\Annotation\AbstractAnnotation;
 use Dreamyi12\ApiDoc\Annotation\Abstracts\CustomAnnotation;
 
 /**
