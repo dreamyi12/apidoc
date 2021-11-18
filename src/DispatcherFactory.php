@@ -296,6 +296,12 @@ class DispatcherFactory extends BaseDispatcherFactory
      * @param array $routeAddress
      * @return \Closure
      */
+    /**
+     * Constructing routing rules
+     * @param $router
+     * @param array $routeAddress
+     * @return \Closure
+     */
     protected function structureRoute($router, $routeAddress = [])
     {
         return function ($httpMethod, string $route, $handler, array $options = [])
@@ -303,10 +309,17 @@ class DispatcherFactory extends BaseDispatcherFactory
             $routeKey = json_encode([$httpMethod, $route, $handler]);
             if (!in_array($routeKey, $routeAddress)) {
                 array_push($routeAddress, $routeKey);
+                //根据请求方式添加额外路由提供给钉钉
+                [$method] = $httpMethod;
+                if(in_array($method,['PUT','DELETE','PATCH'])){
+                    $extraRoute = $route."/".Str::lower($method);
+                    $router->addRoute(['POST'], $extraRoute, $handler, $options);
+                }
                 $router->addRoute($httpMethod, $route, $handler, $options);
             }
         };
     }
+
 
     /**
      * Add route cache

@@ -1,5 +1,6 @@
-# 1.dreamyi12/apidoc
-    
+# dreamyi12/apidoc
+
+### 组件介绍
 它是一个[Hyperf](https://github.com/hyperf/hyperf)框架的 [**api接口自动验证和swagger接口文档生成**] 组件.  
 功能包括：
 - 通过注解定义接口路由、请求方法和参数,并由中间件自动校验接口参数.
