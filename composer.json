@@ -7,10 +7,12 @@
     "authors": [
         {
             "name": "Fan Lee",
-            "email": "dreamyi12@126.com"
+            "email": "dreamyi12@126.com",
+            "homepage": "https://github.com/dreamyi12"
         }
     ],
-    "description": "",
+    "license": "dream",
+    "description": "A Powerful introduction swagger library for Hyperf.",
     "autoload": {
         "psr-4": {
             "Dreamyi12\\ApiDoc\\": "src/"
