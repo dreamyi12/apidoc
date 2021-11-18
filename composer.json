@@ -11,7 +11,7 @@
             "homepage": "https://github.com/dreamyi12"
         }
     ],
-    "license": "dream",
+    "license": "Apache-2.0",
     "description": "A Powerful introduction swagger library for Hyperf.",
     "autoload": {
         "psr-4": {
