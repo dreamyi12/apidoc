@@ -17,16 +17,13 @@ use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Resource\Json\ResourceCollection;
 use Hyperf\Utils\Context;
-use Kph\Helpers\StringHelper;
-use Kph\Helpers\ValidateHelper;
-use Kph\Objects\BaseObject;
 use Psr\Container\ContainerInterface;
 
 /**
  * Class BaseController
  * @package Dreamyi12\ApiDoc\Controller
  */
-abstract class BaseController extends BaseObject implements ControllerInterface
+abstract class BaseController implements ControllerInterface
 {
 
     use SchemaModel;
@@ -138,15 +135,63 @@ abstract class BaseController extends BaseObject implements ControllerInterface
         foreach ($res as &$item) {
             if (is_array($item) && !empty($item)) {
                 $item = self::getDefaultDataBySchemaName('', $item);
-            } elseif (is_string($item) && ValidateHelper::startsWith($item, '$')) {
-                $str = StringHelper::removeBefore($item, '$', true);
-                if (ValidateHelper::isAlphaNumDash($str)) {
+            } elseif (is_string($item) && self::startsWith($item, '$')) {
+                $str = self::removeBefore($item, '$', true);
+                if (self::isAlphaNumDash($str)) {
                     $item = self::getDefaultDataBySchemaName($str, []);
                 }
             }
         }
 
         return $res;
+    }
+
+    /**
+     * 是否由(字母或数字或下划线)组成
+     * @param string $val
+     * @return bool
+     */
+    public static function isAlphaNumDash(string $val): bool {
+        return $val !== '' && @preg_match('/^[A-Za-z0-9\_]+$/', $val);
+    }
+
+    /**
+     * 移除before之前的字符串
+     * @param string $str
+     * @param string $before
+     * @param bool $include 是否移除包括before本身
+     * @param bool $ignoreCase 是否忽略大小写
+     * @return string
+     */
+    public static function removeBefore(string $str, string $before, bool $include = false, bool $ignoreCase = false): string {
+        if ($str == '' || $before == '') {
+            return $str;
+        }
+
+        $i = $ignoreCase ? mb_stripos($str, $before) : mb_strpos($str, $before);
+        if ($i !== false) {
+            if ($include) {
+                $i += mb_strlen($before);
+            }
+            $str = mb_substr($str, $i);
+        }
+
+        return $str;
+    }
+
+    /**
+     * 字符串$val是否以$sub为开头
+     * @param string $val
+     * @param string $sub
+     * @param bool $ignoreCase 是否忽略大小写
+     * @return bool
+     */
+    public static function startsWith(string $val, string $sub, bool $ignoreCase = false): bool {
+        if ($val != '' && $sub != '') {
+            $pos = $ignoreCase ? mb_stripos($val, $sub) : mb_strpos($val, $sub);
+            return $pos === 0;
+        }
+        return false;
     }
 
     protected function getCondition()
