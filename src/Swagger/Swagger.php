@@ -29,7 +29,6 @@ use Dreamyi12\ApiDoc\Helpers\FileHelper;
 use Dreamyi12\ApiDoc\Helpers\OsHelper;
 use Dreamyi12\ApiDoc\Helpers\StringHelper;
 use Dreamyi12\ApiDoc\Helpers\ValidateHelper;
-use Dreamyi12\ApiDoc\Objects\BaseObject;
 use ReflectionException;
 use ReflectionMethod;
 use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
@@ -329,7 +328,7 @@ class Swagger
      */
     public static function getSchemaMethods(string $controller): array
     {
-        $methods = BaseObject::getClassMethods($controller, ReflectionMethod::IS_STATIC | ReflectionMethod::IS_PUBLIC);
+        $methods = self::getClassMethods($controller, ReflectionMethod::IS_STATIC | ReflectionMethod::IS_PUBLIC);
         $methods = array_filter($methods, function ($v) {
             // 以'getSchema'为前缀的公共静态方法
             return ValidateHelper::startsWith($v, ApiAnnotation::$schemaMethodPrefix);
@@ -337,8 +336,55 @@ class Swagger
 
         return $methods;
     }
+    /**
+     * 格式化命名空间
+     * @param string $str
+     * @return string
+     */
+    public static function formatNamespace(string $str): string {
+        $str = DirectoryHelper::formatDir($str);
+        $str = str_replace('/', '\\', $str);
+        return substr($str, 0, -1);
+    }
 
+    /**
+     * 获取类名
+     * @param mixed $var 对象或带命名空间的类名
+     * @return string
+     */
+    public static function getClass($var = null): string {
+        if (is_object($var)) {
+            $cls = get_class($var);
+        } elseif ($var == '' || is_null($var)) {
+            $cls = static::class;
+        } else {
+            $cls = strval($var);
+            $cls = self::formatNamespace($cls);
+        }
 
+        return $cls;
+    }
+
+    public static function getClassMethods($var = null, int $filter = null, bool $includeParent = true): array {
+        $res     = [];
+        $name    = self::getClass($var);
+        $class   = new \ReflectionClass($name);
+        $methods = is_null($filter) ? $class->getMethods() : $class->getMethods($filter);
+        if (!empty($methods)) {
+            foreach ($methods as $methodObj) {
+                array_push($res, $methodObj->name);
+            }
+            //不包括父类的方法
+            if (!$includeParent && $parentClass = get_parent_class($name)) {
+                $parentMethods = get_class_methods($parentClass);
+                if (!empty($parentMethods)) {
+                    $res = array_diff($res, $parentMethods);
+                }
+            }
+        }
+
+        return $res;
+    }
     /**
      * 转换路径中的路由参数,形如{x}
      * @param string $path
