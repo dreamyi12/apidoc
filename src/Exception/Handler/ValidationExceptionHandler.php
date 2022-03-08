@@ -17,7 +17,6 @@ use Hyperf\Di\Annotation\Inject;
 use Hyperf\ExceptionHandler\ExceptionHandler;
 use Hyperf\HttpMessage\Stream\SwooleStream;
 use Hyperf\Validation\ValidationException as HyperfValidationException;
-use Kph\Consts;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
@@ -54,7 +53,7 @@ class ValidationExceptionHandler extends ExceptionHandler {
         } elseif ($throwable instanceof MyValidationException) {
             $res = $showDetailError ? $baseCtrlClass::validationFail($throwable->getMessage()) : $baseCtrlClass::doValidationFail();
         } else {
-            $res = $showDetailError ? $baseCtrlClass::validationFail(Consts::UNKNOWN) : $baseCtrlClass::doValidationFail();
+            $res = $showDetailError ? $baseCtrlClass::validationFail("Unknown") : $baseCtrlClass::doValidationFail();
         }
 
         return $response->withBody(new SwooleStream(json_encode($res)));

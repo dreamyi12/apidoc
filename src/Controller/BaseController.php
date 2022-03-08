@@ -26,8 +26,6 @@ use Psr\Container\ContainerInterface;
 abstract class BaseController implements ControllerInterface
 {
 
-    use SchemaModel;
-
     /**
      * 全局容器Hyperf\Di\Containe
      * @Inject

@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Annotation;
 
-use Dreamyi12\ApiDoc\Annotation\Collector\CustomCollector;
-use Dreamyi12\ApiDoc\Annotation\Enums\EnumClass;
 use Dreamyi12\ApiDoc\ApiAnnotation;
 use Dreamyi12\ApiDoc\Validation\Validator;
 use Hyperf\Constants\ConstantsCollector;

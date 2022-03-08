@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Dreamyi12\ApiDoc\Annotation;
 
 use Hyperf\Di\Annotation\AbstractAnnotation;
-use Kph\Helpers\ArrayHelper;
 
 /**
  * @Annotation

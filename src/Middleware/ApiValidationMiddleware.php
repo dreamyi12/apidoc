@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Dreamyi12\ApiDoc\Middleware;
 
 use Doctrine\Common\Annotations\AnnotationException;
+use Dreamyi12\ApiDoc\Helpers\StringHelper;
 use FastRoute\Dispatcher;
 use Dreamyi12\ApiDoc\Annotation\Body;
 use Dreamyi12\ApiDoc\Annotation\File;
@@ -30,8 +31,6 @@ use Hyperf\HttpServer\CoreMiddleware;
 use Hyperf\HttpServer\Server;
 use Hyperf\HttpServer\Router\Handler;
 use Hyperf\Utils\Context;
-use Kph\Consts;
-use Kph\Objects\BaseObject;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -78,7 +77,7 @@ class ApiValidationMiddleware extends CoreMiddleware
         $server = $container->get(Server::class);
         $serverName = (string)$server->getServerName();
 
-        parent::__construct($container, $serverName ? $serverName : Consts::UNKNOWN);
+        parent::__construct($container, $serverName ? $serverName : "Unknown");
     }
 
 
@@ -121,7 +120,7 @@ class ApiValidationMiddleware extends CoreMiddleware
         $baseCtrlClass = $globalConf->get('apihelper.api.base_controller');
         if (isset($ruleObj->$ctrlAct)) {
             // 先处理BODY规则
-            $typeBody = BaseObject::getShortName(Body::class);
+            $typeBody = get_class(Body::class);
             if (isset($ruleObj->$ctrlAct->$typeBody)) {
                 $data = [Body::NAME => $request->getBody()->getContents()];
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeBody), $data, [], $controllerInstance);
@@ -139,7 +138,7 @@ class ApiValidationMiddleware extends CoreMiddleware
             $allData = array_merge($headers, $queryData, $postData);
 
 
-            $typeHeader = BaseObject::getShortName(Header::class);
+            $typeHeader = get_class(Header::class);
             if (isset($ruleObj->$ctrlAct->$typeHeader)) {
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeHeader), $headers, $allData, $controllerInstance);
                 if (!empty($error)) {
@@ -147,7 +146,7 @@ class ApiValidationMiddleware extends CoreMiddleware
                 }
             }
 
-            $typePath = BaseObject::getShortName(Path::class);
+            $typePath = get_class(Path::class);
             if (isset($ruleObj->$ctrlAct->$typePath)) {
                 $pathData = $routes[2] ?? [];
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typePath), $pathData, $allData, $controllerInstance);
@@ -156,7 +155,7 @@ class ApiValidationMiddleware extends CoreMiddleware
                 }
             }
 
-            $typeQuery = BaseObject::getShortName(Query::class);
+            $typeQuery = get_class(Query::class);
             if (isset($ruleObj->$ctrlAct->$typeQuery)) {
                 //将默认值加入到数据当中
                 if ($ruleObj->$ctrlAct->$typeQuery->default) {
@@ -174,7 +173,7 @@ class ApiValidationMiddleware extends CoreMiddleware
                 }
                 $request = $request->withQueryParams($data);
             }
-            $typeForm = BaseObject::getShortName(Form::class);
+            $typeForm = get_class(Form::class);
 
             if (isset($ruleObj->$ctrlAct->$typeForm)) {
                 if (!empty($ruleObj->$ctrlAct->$typeForm->where)) {
@@ -188,7 +187,7 @@ class ApiValidationMiddleware extends CoreMiddleware
             }
 
             //文件上传
-            $typeFile = BaseObject::getShortName(File::class);
+            $typeFile = get_class(File::class);
             if (isset($ruleObj->$ctrlAct->$typeFile)) {
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeFile), $request->getUploadedFiles(), $allData, $controllerInstance);
                 if (!empty($error)) {

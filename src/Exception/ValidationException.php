@@ -11,13 +11,12 @@ declare(strict_types=1);
 
 namespace Dreamyi12\ApiDoc\Exception;
 
-use Kph\Exceptions\BaseException;
-
+use Exception;
 
 /**
  * Class ValidationException
  * @package Dreamyi12\ApiDoc\Exception
  */
-class ValidationException extends BaseException {
+class ValidationException extends Exception  {
 
 }
