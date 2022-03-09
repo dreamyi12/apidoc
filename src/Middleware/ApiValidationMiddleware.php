@@ -120,7 +120,7 @@ class ApiValidationMiddleware extends CoreMiddleware
         $baseCtrlClass = $globalConf->get('apihelper.api.base_controller');
         if (isset($ruleObj->$ctrlAct)) {
             // 先处理BODY规则
-            $typeBody = get_class(Body::class);
+            $typeBody = StringHelper::getClassNameByString(Body::class);
             if (isset($ruleObj->$ctrlAct->$typeBody)) {
                 $data = [Body::NAME => $request->getBody()->getContents()];
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeBody), $data, [], $controllerInstance);
@@ -138,7 +138,7 @@ class ApiValidationMiddleware extends CoreMiddleware
             $allData = array_merge($headers, $queryData, $postData);
 
 
-            $typeHeader = get_class(Header::class);
+            $typeHeader = StringHelper::getClassNameByString(Header::class);
             if (isset($ruleObj->$ctrlAct->$typeHeader)) {
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeHeader), $headers, $allData, $controllerInstance);
                 if (!empty($error)) {
@@ -146,7 +146,7 @@ class ApiValidationMiddleware extends CoreMiddleware
                 }
             }
 
-            $typePath = get_class(Path::class);
+            $typePath = StringHelper::getClassNameByString(Path::class);
             if (isset($ruleObj->$ctrlAct->$typePath)) {
                 $pathData = $routes[2] ?? [];
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typePath), $pathData, $allData, $controllerInstance);
@@ -155,7 +155,7 @@ class ApiValidationMiddleware extends CoreMiddleware
                 }
             }
 
-            $typeQuery = get_class(Query::class);
+            $typeQuery = StringHelper::getClassNameByString(Query::class);
             if (isset($ruleObj->$ctrlAct->$typeQuery)) {
                 //将默认值加入到数据当中
                 if ($ruleObj->$ctrlAct->$typeQuery->default) {
@@ -173,7 +173,7 @@ class ApiValidationMiddleware extends CoreMiddleware
                 }
                 $request = $request->withQueryParams($data);
             }
-            $typeForm = get_class(Form::class);
+            $typeForm = StringHelper::getClassNameByString(Form::class);
 
             if (isset($ruleObj->$ctrlAct->$typeForm)) {
                 if (!empty($ruleObj->$ctrlAct->$typeForm->where)) {
@@ -187,7 +187,7 @@ class ApiValidationMiddleware extends CoreMiddleware
             }
 
             //文件上传
-            $typeFile = get_class(File::class);
+            $typeFile = StringHelper::getClassNameByString(File::class);
             if (isset($ruleObj->$ctrlAct->$typeFile)) {
                 [$data, $error] = $this->checkRules(get_object_vars($ruleObj->$ctrlAct->$typeFile), $request->getUploadedFiles(), $allData, $controllerInstance);
                 if (!empty($error)) {

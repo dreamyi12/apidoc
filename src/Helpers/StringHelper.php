@@ -16,7 +16,8 @@ use Throwable;
  * Class StringHelper
  * @package Dreamyi12\ApiDoc\Helpers
  */
-class StringHelper {
+class StringHelper
+{
 
 
     /**
@@ -38,7 +39,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function md5Short(string $str): string {
+    public static function md5Short(string $str): string
+    {
         return substr(md5(strval($str)), 8, 16);
     }
 
@@ -51,7 +53,8 @@ class StringHelper {
      * @param string $dot 后接的省略符
      * @return string
      */
-    public static function cutStr(string $str, int $length, int $start = 0, string $dot = ''): string {
+    public static function cutStr(string $str, int $length, int $start = 0, string $dot = ''): string
+    {
         //转换html实体
         $str = htmlspecialchars_decode($str);
         $len = mb_strlen($str, 'UTF-8');
@@ -71,7 +74,8 @@ class StringHelper {
      * @param bool $filterTags 是否过滤(html/php)标签
      * @return int
      */
-    public static function length(string $str, bool $filterTags = false): int {
+    public static function length(string $str, bool $filterTags = false): int
+    {
         if ($filterTags) {
             $str = html_entity_decode($str, ENT_QUOTES, 'UTF-8');
             $str = strip_tags($str);
@@ -87,14 +91,15 @@ class StringHelper {
      * @param bool $hasSpecial 是否有特殊字符
      * @return string
      */
-    public static function randSimple(int $len = 6, bool $hasSpecial = false): string {
+    public static function randSimple(int $len = 6, bool $hasSpecial = false): string
+    {
         $chars = 'abcdefghijklmnpqrstuvwxyzABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
         if ($hasSpecial) {
             $chars .= '!@#$%^&*()_+-=`~[]{}|<>?:';
         }
 
         $result = '';
-        $max    = strlen($chars) - 1;
+        $max = strlen($chars) - 1;
         for ($i = 0; $i < $len; $i++) {
             $result .= $chars[rand(0, $max)];
         }
@@ -107,7 +112,8 @@ class StringHelper {
      * @param int $len 字符串长度
      * @return string
      */
-    public static function randNumber(int $len = 6): string {
+    public static function randNumber(int $len = 6): string
+    {
         if ($len <= 10) {
             $arr = range(0, 9);
         } else {
@@ -127,7 +133,8 @@ class StringHelper {
      * @param string $addChars 额外的随机字符
      * @return string
      */
-    public static function randString(int $len = 6, int $type = 0, string $addChars = ''): string {
+    public static function randString(int $len = 6, int $type = 0, string $addChars = ''): string
+    {
         $str = '';
         switch ($type) {
             case 1:
@@ -158,7 +165,7 @@ class StringHelper {
 
         //位数过长重复字符串一定次数
         $charLen = mb_strlen($chars, 'UTF-8');
-        $diff    = $len / $charLen;
+        $diff = $len / $charLen;
         if ($diff > 1) {
             $chars = str_repeat($chars, ceil($diff));
         }
@@ -169,7 +176,7 @@ class StringHelper {
             }
         } else {
             $chars = str_shuffle($chars);
-            $str   = substr($chars, 0, $len);
+            $str = substr($chars, 0, $len);
         }
 
         return $str;
@@ -182,9 +189,10 @@ class StringHelper {
      * @param string $html
      * @return string
      */
-    public static function fixHtml(string $html): string {
+    public static function fixHtml(string $html): string
+    {
         $isMultibyte = ValidateHelper::isMultibyte($html);
-        $hasBodyTag  = preg_match_all("/<(\/?(html|body).*?)>/is", $html, $bodyMatch);
+        $hasBodyTag = preg_match_all("/<(\/?(html|body).*?)>/is", $html, $bodyMatch);
 
         $doc = new \DOMDocument();
         if ($isMultibyte) {
@@ -212,7 +220,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function DBC2SBC(string $str): string {
+    public static function DBC2SBC(string $str): string
+    {
         return str_replace(self::$DBCChars, self::$SBCChars, $str);
     }
 
@@ -222,7 +231,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function SBC2DBC(string $str): string {
+    public static function SBC2DBC(string $str): string
+    {
         return str_replace(self::$SBCChars, self::$DBCChars, $str);
     }
 
@@ -233,19 +243,20 @@ class StringHelper {
      * @param array $searchs 要查找的字符串数组
      * @return array
      */
-    public static function getClosestWord(string $word, array $searchs): array {
+    public static function getClosestWord(string $word, array $searchs): array
+    {
         $shortest = -1;
-        $closest  = null;
+        $closest = null;
 
         foreach ($searchs as $search) {
             $lev = levenshtein($word, $search);
             if ($lev == 0) { //完全相等
-                $closest  = $search;
+                $closest = $search;
                 $shortest = 0;
                 break;
             }
             if ($lev <= $shortest || $shortest < 0) {
-                $closest  = $search;
+                $closest = $search;
                 $shortest = $lev;
             }
         }
@@ -265,7 +276,8 @@ class StringHelper {
      * @param string $charset 字符集
      * @return string
      */
-    public static function escape(string $str, $charset = 'UTF-8'): string {
+    public static function escape(string $str, $charset = 'UTF-8'): string
+    {
         preg_match_all("/[^\x{00}-\x{ff}]|[\x{00}-\x{ff}]+/u", $str, $matches);
         $arr = $matches[0] ?? [];
         foreach ($arr as $k => $v) {
@@ -287,7 +299,8 @@ class StringHelper {
      * @param string $charset 字符集
      * @return string
      */
-    public static function unescape(string $str, $charset = 'UTF-8'): string {
+    public static function unescape(string $str, $charset = 'UTF-8'): string
+    {
         $str = rawurldecode($str);
         preg_match_all("/%u.{4}|&#x.{4};|&#\d+;|.+/U", $str, $matches);
         $arr = $matches[0] ?? [];
@@ -311,7 +324,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function getFirstLetter(string $str): string {
+    public static function getFirstLetter(string $str): string
+    {
         $res = '';
         if (!empty($str)) {
             $firstChar = ord(strtoupper($str[0]));
@@ -319,7 +333,7 @@ class StringHelper {
                 return strtoupper($str[0]);
             }
 
-            $s   = mb_convert_encoding($str, 'gb2312');
+            $s = mb_convert_encoding($str, 'gb2312');
             $asc = ord($s[0]) * 256 + ord($s[1]) - 65536;
             if ($asc >= -20319 && $asc <= -20284)
                 return "A";
@@ -378,7 +392,8 @@ class StringHelper {
      * @param string $html
      * @return array
      */
-    public static function matchImages(string $html): array {
+    public static function matchImages(string $html): array
+    {
         $images = [];
         if (!empty($html)) {
             preg_match_all('/<img.*src=(.*)[>|\\s]/iU', $html, $matchs);
@@ -399,7 +414,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function br2nl(string $str): string {
+    public static function br2nl(string $str): string
+    {
         return preg_replace('/\<br(\s*)?\/?\>/i', "\n", $str);
     }
 
@@ -409,7 +425,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function trim(string $str): string {
+    public static function trim(string $str): string
+    {
         return trim($str, " \t\n\r\v\f\0\x0B　");
     }
 
@@ -420,7 +437,8 @@ class StringHelper {
      * @param bool $all 为true时移除全部空白,为false时只替换连续的空白字符为一个空格
      * @return string
      */
-    public static function removeSpace(string $str, bool $all = true): string {
+    public static function removeSpace(string $str, bool $all = true): string
+    {
         if ($str == '') {
             return '';
         }
@@ -440,7 +458,8 @@ class StringHelper {
      * @param string $html
      * @return string
      */
-    public static function getText(string $html): string {
+    public static function getText(string $html): string
+    {
         if ($html == '') {
             return '';
         }
@@ -502,7 +521,8 @@ class StringHelper {
      * @param string $html
      * @return string
      */
-    public static function removeHtml(string $html): string {
+    public static function removeHtml(string $html): string
+    {
         if ($html == '') {
             return '';
         }
@@ -592,7 +612,8 @@ class StringHelper {
      * @param int $type 统计类型: 0:按字符统计; 1:只统计英文单词; 2:按英文单词和中文字数
      * @return int
      */
-    public static function stringWordCount(string $str, int $type = 0): int {
+    public static function stringWordCount(string $str, int $type = 0): int
+    {
         $str = trim($str);
         switch ($type) {
             case 0:
@@ -604,14 +625,14 @@ class StringHelper {
                 $len = str_word_count($str);
                 break;
             case 2:
-                $str         = self::removeHtml(html_entity_decode($str, ENT_QUOTES, 'UTF-8'));
-                $utf8_cn     = "/[\x{4e00}-\x{9fff}\x{f900}-\x{faff}]/u";//中文
+                $str = self::removeHtml(html_entity_decode($str, ENT_QUOTES, 'UTF-8'));
+                $utf8_cn = "/[\x{4e00}-\x{9fff}\x{f900}-\x{faff}]/u";//中文
                 $utf8_symbol = "/[\x{ff00}-\x{ffef}\x{2000}-\x{206F}]/u";//中文标点符号
 
-                $str   = preg_replace($utf8_symbol, ' ', $str);
+                $str = preg_replace($utf8_symbol, ' ', $str);
                 $cnLen = preg_match_all($utf8_cn, $str, $textrr);
 
-                $str   = preg_replace($utf8_cn, ' ', $str);
+                $str = preg_replace($utf8_cn, ' ', $str);
                 $enLen = str_word_count($str);
 
                 $len = intval($cnLen) + $enLen;
@@ -627,7 +648,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function hideCard(string $str): string {
+    public static function hideCard(string $str): string
+    {
         $res = '******';
         $len = strlen($str);
         if ($len > 4 && $len <= 10) {
@@ -645,7 +667,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function hideMobile(string $str): string {
+    public static function hideMobile(string $str): string
+    {
         $res = '***';
         $len = strlen($str);
         if ($len > 7) {
@@ -661,7 +684,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function hideTrueName(string $str): string {
+    public static function hideTrueName(string $str): string
+    {
         $res = '**';
         if ($str != '') {
             $len = mb_strlen($str, 'UTF-8');
@@ -687,7 +711,8 @@ class StringHelper {
      * @param string $str base64字符串
      * @return int
      */
-    public static function countBase64Byte(string $str): int {
+    public static function countBase64Byte(string $str): int
+    {
         if (empty($str)) {
             return 0;
         }
@@ -705,13 +730,14 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function str2Bin(string $str): string {
+    public static function str2Bin(string $str): string
+    {
         //列出每个字符
         $arr = preg_split('/(?<!^)(?!$)/u', $str);
         //unpack字符
         foreach ($arr as &$v) {
             $temp = unpack('H*', $v);
-            $v    = base_convert($temp[1], 16, 2);
+            $v = base_convert($temp[1], 16, 2);
             unset($temp);
         }
 
@@ -724,7 +750,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function bin2Str(string $str): string {
+    public static function bin2Str(string $str): string
+    {
         $arr = explode(' ', $str);
         foreach ($arr as &$v) {
             $v = pack("H" . strlen(base_convert($v, 2, 16)), base_convert($v, 2, 16));
@@ -740,7 +767,8 @@ class StringHelper {
      * @param string ...$delimiters 分隔符数组
      * @return array
      */
-    public static function multiExplode(string $str, string ...$delimiters): array {
+    public static function multiExplode(string $str, string ...$delimiters): array
+    {
         $res = [];
         if ($str == '') {
             return $res;
@@ -766,10 +794,11 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function removeEmoji(string $str): string {
+    public static function removeEmoji(string $str): string
+    {
         if ($str != '') {
             $hasTree = false;
-            $str     = preg_replace_callback('/./u',
+            $str = preg_replace_callback('/./u',
                 function (array $match) use (&$hasTree) {
                     $len = strlen($match[0]);
                     //存在3字节长度的表情符
@@ -793,7 +822,8 @@ class StringHelper {
      * @param string $str
      * @return bool
      */
-    private static function isCaseConnector(string $str): bool {
+    private static function isCaseConnector(string $str): bool
+    {
         return mb_strlen($str) == 1 && ($str == '-' || $str == '_' || ValidateHelper::isSpace($str));
     }
 
@@ -804,19 +834,20 @@ class StringHelper {
      * @param string $connector 连接符
      * @return string
      */
-    private static function camelCaseToLowerCase(string $str, string $connector): string {
+    private static function camelCaseToLowerCase(string $str, string $connector): string
+    {
         if ($str == '') {
             return '';
         }
 
-        $res  = [];
+        $res = [];
         $prev = $r0 = $r1 = '';
-        $r0   = $connector;
+        $r0 = $connector;
 
         while (mb_strlen($str) > 0) {
             $prev = $r0;
-            $r0   = mb_substr($str, 0, 1);
-            $str  = mb_substr($str, 1);
+            $r0 = mb_substr($str, 0, 1);
+            $str = mb_substr($str, 1);
 
             switch ($r0) {
                 case ValidateHelper::isUpperLetter($r0):
@@ -830,7 +861,7 @@ class StringHelper {
                         break;
                     }
 
-                    $r0  = mb_substr($str, 0, 1);
+                    $r0 = mb_substr($str, 0, 1);
                     $str = mb_substr($str, 1);
 
                     if (!ValidateHelper::isUpperLetter($r0)) {
@@ -839,8 +870,8 @@ class StringHelper {
                     }
 
                     while (mb_strlen($str) > 0) {
-                        $r1  = $r0;
-                        $r0  = mb_substr($str, 0, 1);
+                        $r1 = $r0;
+                        $r0 = mb_substr($str, 0, 1);
                         $str = mb_substr($str, 1);
 
                         if (!ValidateHelper::isUpperLetter($r0)) {
@@ -893,16 +924,17 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function toCamelCase(string $str): string {
+    public static function toCamelCase(string $str): string
+    {
         if ($str == '') {
             return '';
         }
 
         $res = [];
-        $r0  = $r1 = '';
+        $r0 = $r1 = '';
 
         while (strlen($str) > 0) {
-            $r0  = mb_substr($str, 0, 1);
+            $r0 = mb_substr($str, 0, 1);
             $str = mb_substr($str, 1);
 
             if (!self::isCaseConnector($r0)) {
@@ -914,8 +946,8 @@ class StringHelper {
         }
 
         while (strlen($str) > 0) {
-            $r1  = $r0;
-            $r0  = mb_substr($str, 0, 1);
+            $r1 = $r0;
+            $r0 = mb_substr($str, 0, 1);
             $str = mb_substr($str, 1);
 
             if (self::isCaseConnector($r0) && self::isCaseConnector($r1)) {
@@ -945,7 +977,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function toSnakeCase(string $str): string {
+    public static function toSnakeCase(string $str): string
+    {
         return self::camelCaseToLowerCase($str, '_');
     }
 
@@ -955,7 +988,8 @@ class StringHelper {
      * @param string $str
      * @return string
      */
-    public static function toKebabCase(string $str): string {
+    public static function toKebabCase(string $str): string
+    {
         return self::camelCaseToLowerCase($str, '-');
     }
 
@@ -966,7 +1000,8 @@ class StringHelper {
      * @param string $encoding
      * @return array
      */
-    public static function toArray(string $str, $encoding = 'UTF-8'): array {
+    public static function toArray(string $str, $encoding = 'UTF-8'): array
+    {
         $res = [];
         while ($len = mb_strlen($str, $encoding)) {
             array_push($res, mb_substr($str, 0, 1, $encoding));
@@ -985,7 +1020,8 @@ class StringHelper {
      * @param bool $case 是否检查大小写
      * @return bool|mixed
      */
-    public static function dstrpos(string $str, array $arr, bool $returnValue = false, bool $case = false) {
+    public static function dstrpos(string $str, array $arr, bool $returnValue = false, bool $case = false)
+    {
         if (empty($str) || empty($arr)) {
             return false;
         }
@@ -1009,7 +1045,8 @@ class StringHelper {
      * @param bool $ignoreCase 是否忽略大小写
      * @return string
      */
-    public static function removeBefore(string $str, string $before, bool $include = false, bool $ignoreCase = false): string {
+    public static function removeBefore(string $str, string $before, bool $include = false, bool $ignoreCase = false): string
+    {
         if ($str == '' || $before == '') {
             return $str;
         }
@@ -1034,7 +1071,8 @@ class StringHelper {
      * @param bool $ignoreCase 是否忽略大小写
      * @return string
      */
-    public static function removeAfter(string $str, string $after, bool $include = false, bool $ignoreCase = false): string {
+    public static function removeAfter(string $str, string $after, bool $include = false, bool $ignoreCase = false): string
+    {
         if ($str == '' || $after == '') {
             return $str;
         }
@@ -1056,7 +1094,8 @@ class StringHelper {
      * @param string $str 密码
      * @return int 等级0~4
      */
-    public static function passwdSafeGrade(string $str): int {
+    public static function passwdSafeGrade(string $str): int
+    {
         $special = '/[\W_]/'; //特殊字符
         $partArr = [
             '/[0-9]/',
@@ -1064,8 +1103,8 @@ class StringHelper {
             '/[A-Z]/',
             $special,
         ];
-        $score   = 0;
-        $leng    = strlen($str);
+        $score = 0;
+        $leng = strlen($str);
 
         //根据长度加分
         if ($leng > 0) {
@@ -1087,7 +1126,7 @@ class StringHelper {
         }
 
         //重复检测
-        $repeatChar  = '';
+        $repeatChar = '';
         $repeatCount = 0;
         for ($i = 0; $i < $leng; $i++) {
             if ($str[$i] == $repeatChar) {
@@ -1155,8 +1194,9 @@ class StringHelper {
      * @return string
      * @throws Exception
      */
-    public static function uuidV4(): string {
-        $data    = random_bytes(16);
+    public static function uuidV4(): string
+    {
+        $data = random_bytes(16);
         $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
         $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
@@ -1170,7 +1210,8 @@ class StringHelper {
      * @param bool $ignoreCase 是否忽略大小写
      * @return bool
      */
-    public static function contains(string $str, string $sub, bool $ignoreCase = false): bool {
+    public static function contains(string $str, string $sub, bool $ignoreCase = false): bool
+    {
         if (is_null($str) || $str === '') {
             return false;
         }
@@ -1187,7 +1228,8 @@ class StringHelper {
      * @param string|null $end 结束定界符
      * @return string
      */
-    public static function middle(string $str, string $begin = null, string $end = null): string {
+    public static function middle(string $str, string $begin = null, string $end = null): string
+    {
         if ($str === '') {
             return '';
         }
@@ -1236,7 +1278,8 @@ class StringHelper {
      * @param bool $isLimit 是否限制处理次数
      * @return string
      */
-    public static function stripBrackets(string $str, int $type = 0, bool $isLimit = false): string {
+    public static function stripBrackets(string $str, int $type = 0, bool $isLimit = false): string
+    {
         $limit = $isLimit ? 1 : -1;
 
         try {
@@ -1269,7 +1312,8 @@ class StringHelper {
      * @param bool $includeBracket 是否包括括号本身
      * @return array
      */
-    public static function grabBrackets(string $str, int $type = 0, bool $includeBracket = false): array {
+    public static function grabBrackets(string $str, int $type = 0, bool $includeBracket = false): array
+    {
         $res = [];
 
         try {
@@ -1290,5 +1334,15 @@ class StringHelper {
         return $res;
     }
 
+    /**
+     * @param string $str
+     * @param bool $isComplete
+     * @return string|string[]
+     */
+    public static function getClassNameByString(string $str, bool $isComplete = false): string|array
+    {
+        $strings = explode('\\', $str);
+        return $isComplete == false ? end($strings) : $strings;
+    }
 
 }
