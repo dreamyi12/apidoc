@@ -1339,7 +1339,7 @@ class StringHelper
      * @param bool $isComplete
      * @return string|string[]
      */
-    public static function getClassNameByString(string $str, bool $isComplete = false): string|array
+    public static function getClassNameByString(string $str, bool $isComplete = false)
     {
         $strings = explode('\\', $str);
         return $isComplete == false ? end($strings) : $strings;
