@@ -169,10 +169,10 @@ class DispatcherFactory extends BaseDispatcherFactory
                     $default[$fieldName] = $annotation->default;
                 }
                 $rules[$paramType] = [
-                    'path' => isset($path) ? $path : [],
-                    'function' => isset($function) ? $function : [],
-                    'where' => isset($query_where) ? $query_where : [],
-                    'default' => isset($default) ? $default : [],
+                    'path' => $path ?? [],
+                    'function' => $function ?? [],
+                    'where' => $query_where ?? [],
+                    'default' => $default ?? [],
                     'frames' => $frames,
                     'customs' => $customs,
                 ];
@@ -198,7 +198,7 @@ class DispatcherFactory extends BaseDispatcherFactory
             if (Arr::has(CustomCollector::getAnnotationByClasses(CustomValidator::class), $ruleName)) {
                 $customs[] = $rule;
                 // Framework validation rules
-            }else if (method_exists(ValidatesAttributes::class, $frameMethod)) {
+            } else if (method_exists(ValidatesAttributes::class, $frameMethod)) {
                 $frames[] = $rule;
             } else {
                 throw new ServerRuntimeException("The rule not defined: {$ruleName}");
@@ -291,18 +291,11 @@ class DispatcherFactory extends BaseDispatcherFactory
     }
 
     /**
-     * Constructing routing rules
      * @param $router
      * @param array $routeAddress
      * @return \Closure
      */
-    /**
-     * Constructing routing rules
-     * @param $router
-     * @param array $routeAddress
-     * @return \Closure
-     */
-    protected function structureRoute($router, $routeAddress = [])
+    protected function structureRoute($router, $routeAddress = []): \Closure
     {
         return function ($httpMethod, string $route, $handler, array $options = [])
         use ($router, $routeAddress) {
@@ -311,8 +304,8 @@ class DispatcherFactory extends BaseDispatcherFactory
                 array_push($routeAddress, $routeKey);
                 //根据请求方式添加额外路由提供给钉钉
                 [$method] = $httpMethod;
-                if(in_array($method,['PUT','DELETE','PATCH'])){
-                    $extraRoute = $route."/".Str::lower($method);
+                if (in_array($method, ['PUT', 'DELETE', 'PATCH'])) {
+                    $extraRoute = $route . "/" . Str::lower($method);
                     $router->addRoute(['POST'], $extraRoute, $handler, $options);
                 }
                 $router->addRoute($httpMethod, $route, $handler, $options);
@@ -327,8 +320,7 @@ class DispatcherFactory extends BaseDispatcherFactory
     protected function addRouteCache(): void
     {
         $apiAnnotation = new ApiAnnotation();
-        $tmps = json_decode(json_encode($this->tmps));
-        $apiAnnotation->setRouteCache($tmps);
+        $apiAnnotation->setRouteCache(json_decode(json_encode($this->tmps)));
         $this->tmps = [];
         $container = ApplicationContext::getContainer();
         $container->set(ApiAnnotation::class, $apiAnnotation);

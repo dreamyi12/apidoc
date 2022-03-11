@@ -16,7 +16,7 @@ use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\HttpServer\Contract\ResponseInterface;
 use Hyperf\Resource\Json\ResourceCollection;
-use Hyperf\Utils\Context;
+use Hyperf\Context\Context;
 use Psr\Container\ContainerInterface;
 
 /**

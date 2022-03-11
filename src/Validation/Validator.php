@@ -17,7 +17,7 @@ use Hyperf\Contract\TranslatorInterface;
 use Hyperf\Di\Annotation\Inject;
 use Hyperf\HttpServer\Contract\RequestInterface;
 use Hyperf\Translation\TranslatorFactory;
-use Hyperf\Utils\Context;
+use Hyperf\Context\Context;
 use Hyperf\Validation\Contract\ValidatorFactoryInterface;
 use Hyperf\Validation\ValidatorFactory;
 use League\Flysystem\Filesystem;

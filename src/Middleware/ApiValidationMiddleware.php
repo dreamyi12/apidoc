@@ -30,7 +30,7 @@ use Hyperf\HttpServer\Contract\ResponseInterface as HttpResponse;
 use Hyperf\HttpServer\CoreMiddleware;
 use Hyperf\HttpServer\Server;
 use Hyperf\HttpServer\Router\Handler;
-use Hyperf\Utils\Context;
+use Hyperf\Context\Context;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

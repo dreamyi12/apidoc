@@ -118,14 +118,14 @@ class Swagger
         $this->confSwagger['definitions']['Response'] = $response;
 
         //基本控制器中定义的其他结构模型
-        $methods = self::getSchemaMethods($baseCtrlClass);
+        $methods = self::getSchemaMethods((string)$baseCtrlClass);
         foreach ($methods as $method) {
             $this->confSwagger['schemaMethods'][$method] = $baseCtrlClass;
             if ($method === 'getSchemaResponse') { //忽略外层基本结构模型
                 continue;
             }
 
-            $this->parseSchemaModelByName($baseCtrlClass, $method, $methods);
+            $this->parseSchemaModelByName((string)$baseCtrlClass, $method, $methods);
         }
     }
 
@@ -605,14 +605,6 @@ class Swagger
             if (!is_null($item->default)) {
                 $parameters[$item->name]['default'] = $item->default;
             }
-
-//            if (!is_null($item->enum)) {
-//                [$enumName] = $item->enum;
-//                if(!isset($enums[$enumName])){
-//                    throw new RuntimeException("The enumeration `{$enumName}` class is not defined ");
-//                }
-//                $parameters[$item->name]['enum'] = array_keys($enums[$enumName]::getEnums());
-//            }
 
             //字段值举例
             if (!is_null($item->example)) {
