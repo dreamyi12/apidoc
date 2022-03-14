@@ -89,7 +89,6 @@ class Validator implements ValidationInterface
         $errors = [];
         Context::set('validator.data', $newData);
         $data = array_merge($data, $newData);
-        //再执行自定义验证
         $error = $this->customsValidate($data, $rules['customs']);
         $errors = array_merge($errors, $frameError, $error);
         return [$data, $errors];
@@ -181,8 +180,7 @@ class Validator implements ValidationInterface
      * @param $functions
      * @return array
      */
-    private
-    function handleFunction($data, $functions): array
+    private function handleFunction($data, $functions): array
     {
         foreach ($functions as $field => $function) {
             if (empty($data[$field]) || !function_exists($function))

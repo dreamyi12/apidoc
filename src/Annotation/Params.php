@@ -287,7 +287,7 @@ class Params extends AbstractAnnotation
             $type = $this->getTypeByRule($this->rule);
         }
 
-        $this->type = $type;
+        $this->type = $this->type ?? $type;
 
         return $this;
     }
