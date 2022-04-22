@@ -29,7 +29,7 @@ class Condition
         $where = self::getValidatorWhere();
         $data = self::getValidatorData();
         foreach ($where as $field => $option) {
-            if (empty($option) || !isset($data[$field]) || empty(isset($data[$field]))) continue;
+            if (empty($option) || !isset($data[$field]) || $data[$field] === null || $data[$field] === '') continue;
             $whereParam = new WhereParams();
             foreach ($option as $key => $value) {
                 $method = "set" . ucfirst($key);

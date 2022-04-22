@@ -3,6 +3,7 @@
 namespace Dreamyi12\ApiDoc\Condition\Abstracts;
 
 use Hyperf\Database\Model\Builder;
+use Hyperf\Database\Model\Model;
 use Hyperf\Utils\ApplicationContext;
 use Dreamyi12\ApiDoc\Condition\Condition;
 use Dreamyi12\ApiDoc\Condition\Interfaces\ConditionInterface;
@@ -21,11 +22,10 @@ abstract class ConditionAbstract implements ConditionInterface
     protected $condition;
 
     /**
-     *
      * ConditionAbstract constructor.
-     * @param Builder $builder
+     * @param Builder|Model $builder
      */
-    public function __construct(Builder $builder)
+    public function __construct(Builder|Model $builder)
     {
         $this->builder = $builder;
     }
@@ -49,7 +49,7 @@ abstract class ConditionAbstract implements ConditionInterface
             if ($option->getValue() === null) {
                 continue;
             }
-            if($option->getField()){
+            if ($option->getField()) {
                 $field = $option->getField();
             }
             if ($option->getOp() === "has") {

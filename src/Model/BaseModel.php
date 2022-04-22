@@ -11,25 +11,6 @@ use Hyperf\Utils\Str;
 
 class BaseModel extends Model
 {
-    /**
-     * @var array
-     */
-    protected $castsClass = [];
-
-    /**
-     * @var array
-     */
-    protected $savePermission = [];
-
-    /**
-     * @var array
-     */
-    protected $deletePermission = [];
-
-    /**
-     * @var array
-     */
-    protected $selectPermission = [];
 
 
     /**
@@ -39,7 +20,7 @@ class BaseModel extends Model
      */
     public static function condition()
     {
-        return (new ConditionHandle(self::query()))->handle()->getBuilder();
+        return (new ConditionHandle(self::getModel()))->handle()->getBuilder();
     }
 
 
@@ -150,27 +131,5 @@ class BaseModel extends Model
         return new $castType(...$arguments);
     }
 
-    /**
-     * @return array
-     */
-    public function getDeletePermission()
-    {
-        return $this->deletePermission;
-    }
 
-    /**
-     * @return array
-     */
-    public function getSavePermission()
-    {
-        return $this->savePermission;
-    }
-
-    /**
-     * @return array
-     */
-    public function getSelectPermission()
-    {
-        return $this->selectPermission;
-    }
 }
